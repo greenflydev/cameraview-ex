@@ -614,6 +614,19 @@ internal open class Camera2(
         return true
     }
 
+    /**
+     * Can be used to open the camera to a specified cameraId
+     */
+    override fun start(cameraId: Int): Boolean {
+        cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)
+        if (!chooseCameraById(cameraId.toString())) return false
+        if (backgroundThread == null && backgroundHandler == null) startBackgroundThread()
+        collectCameraInfo()
+        prepareImageReader()
+        startOpeningCamera()
+        return true
+    }
+
     override fun stop() {
         try {
             cameraOpenCloseLock.acquire()
@@ -682,12 +695,32 @@ internal open class Camera2(
     /**
      * Chooses a camera ID by the specified camera facing ([CameraConfiguration.facing]).
      *
+     * Phones can have more than two cameras. If config.facing.value is greater than 1
+     * (meaning not BACK or FRONT) then setup that cameraId.
+     *
      * This rewrites [cameraId], [cameraCharacteristics], and optionally
      * [CameraConfiguration.facing].
      */
     private fun chooseCameraIdByFacing(): Boolean {
 
         try {
+            /*
+             * If the facing value is greater than 1 then treat this case special
+             * and set the cameraId to what the facing value is.
+             */
+            val cameraIdStr = config.facing.value.toString()
+            if (config.facing.value > Modes.Facing.FACING_FRONT &&
+                    cameraManager.cameraIdList.contains(cameraIdStr)) {
+                val characteristics = cameraManager.getCameraCharacteristics(cameraIdStr)
+                val level = characteristics.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)
+                if (level != null &&
+                        level != CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY) {
+                    cameraId = cameraIdStr
+                    cameraCharacteristics = characteristics
+                    return true
+                }
+            }
+
             cameraManager.cameraIdList.run {
                 ifEmpty { throw CameraViewException("No camera available.") }
                 forEach { id ->
@@ -732,6 +765,57 @@ internal open class Camera2(
             listener.onCameraError(CameraViewException("Failed to get a list of camera devices", e))
             return false
         }
+    }
+
+    /**
+     * Gets the cameraIds that are facing front or back.
+     * Pass in either Modes.Facing.FACING_BACK or FACING_FRONT
+     */
+    override fun cameraIdsByFacing(facing: Int): List<Int> {
+        val ids = mutableListOf<Int>()
+        cameraManager.cameraIdList.run {
+            forEach { id ->
+                val characteristics = cameraManager.getCameraCharacteristics(id)
+                val level = characteristics.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)
+                if (level != null &&
+                        level != CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY) {
+                    val internal = characteristics.get(CameraCharacteristics.LENS_FACING)
+                    if (internal != null && internal == CameraCharacteristics.LENS_FACING_BACK &&
+                            facing == Modes.Facing.FACING_BACK) {
+                        ids.add(Integer.parseInt(id))
+                    }
+                    else if (internal != null && internal == CameraCharacteristics.LENS_FACING_FRONT &&
+                            facing == Modes.Facing.FACING_FRONT) {
+                        ids.add(Integer.parseInt(id))
+                    }
+                }
+            }
+        }
+        return ids
+    }
+
+    /**
+     * Gets a list of focal lengths for the passed in cameraId
+     */
+    override fun focalLengths(cameraId: Int): List<Float> {
+        val focalLengths = mutableListOf<Float>()
+        val characteristics = cameraManager.getCameraCharacteristics(cameraId.toString())
+        characteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS)?.
+                forEach { focalLengths.add(it) }
+        return focalLengths
+    }
+
+    /**
+     * This will choose a camera based on a passed in cameraId
+     * Called from [start(cameraId)]
+     */
+    private fun chooseCameraById(cameraId: String): Boolean {
+        if (cameraManager.cameraIdList.contains(cameraId)) {
+            this.cameraId = cameraId
+            cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
+            return true
+        }
+        return false
     }
 
     /**

@@ -430,6 +430,40 @@ class CameraView @JvmOverloads constructor(
     }
 
     /**
+     * Open a camera device to a specified camera and start showing camera preview.
+     * This is typically called from [Activity.onResume].
+     */
+    @RequiresPermission(Manifest.permission.CAMERA)
+    fun start(id: Int) {
+        if (!camera.start(id)) {
+            // Store the state and restore this state after falling back to Camera1
+            val state = onSaveInstanceState()
+            // Device uses legacy hardware layer; fall back to Camera1
+            camera = Camera1(listener, preview, config)
+            onRestoreInstanceState(state)
+            camera.start(id)
+        }
+    }
+
+    /**
+     * Takes in either Modes.Facing.FACING_BACK or FACING_FRONT
+     * @return `list of camera ids` that are facing the passed in direction
+     * This is used to support devices with multiple back or front cameras
+     */
+    fun cameraIdsByFacing(facing: Int): List<Int> {
+        return camera.cameraIdsByFacing(facing)
+    }
+
+    /**
+     * Takes in a cameraId and returns the focal lengths for the camera
+     * @return `list of focal lengths` for the cameraId
+     * This is used for devices with more than one front of back camera.
+     */
+    fun focalLengths(cameraId: Int): List<Float> {
+        return camera.focalLengths(cameraId)
+    }
+
+    /**
      * Stop camera preview and close the device. This is typically called from
      * [Activity.onPause].
      * @param removeAllListeners if `true`, removes all listeners previously set. See [CameraView.removeAllListeners]
