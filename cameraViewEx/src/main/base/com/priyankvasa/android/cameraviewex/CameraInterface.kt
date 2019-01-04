@@ -50,6 +50,11 @@ internal interface CameraInterface : LifecycleOwner {
      */
     fun start(): Boolean
 
+    /**
+     * @return `true` if the implementation was able to start the passed in cameraId
+     */
+    fun start(cameraId: Int): Boolean
+
     fun stop()
 
     /**
@@ -68,6 +73,18 @@ internal interface CameraInterface : LifecycleOwner {
     fun resumeVideoRecording(): Boolean
 
     fun stopVideoRecording(): Boolean
+
+    /**
+     * Takes in either Modes.Facing.FACING_BACK or FACING_FRONT
+     * @return `list of camera ids` that are facing the passed in direction
+     */
+    fun cameraIdsByFacing(facing: Int): List<Int>
+
+    /**
+     * Takes in a cameraId
+     * @return `list of focal lengths` for the cameraId
+     */
+    fun focalLengths(cameraId: Int): List<Float>
 
     interface Listener {
         suspend fun onCameraOpened()
