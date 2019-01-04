@@ -933,7 +933,7 @@ internal open class Camera2(
                     CameraViewException("Af mode ${config.autoFocus.value} not supported by selected camera. Setting it to off."),
                     ErrorLevel.Warning
             )
-            config.autoFocus.value = Modes.DEFAULT_AUTO_FOCUS
+            config.autoFocus.postValue(Modes.DEFAULT_AUTO_FOCUS)
         }
     }
 
