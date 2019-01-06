@@ -1138,7 +1138,7 @@ internal open class Camera2(
     // Calculate output orientation based on device sensor orientation.
     private val outputOrientation: Int
         get() {
-            var sensorOrientation = cameraCharacteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)
+            val sensorOrientation = cameraCharacteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)
                     ?: throw CameraViewException("Camera characteristics not available")
 
             return (sensorOrientation
@@ -1200,7 +1200,6 @@ internal open class Camera2(
         val videoSize = chooseOptimalSize(Template.Record)
 
         mediaRecorder = (mediaRecorder?.apply { reset() } ?: MediaRecorder()).apply {
-
             runCatching { setOrientationHint(outputOrientation) }
                     .onFailure { t ->
                         // Angle outputOrientation is not supported
