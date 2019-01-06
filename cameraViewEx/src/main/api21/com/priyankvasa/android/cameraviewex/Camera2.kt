@@ -79,13 +79,6 @@ internal open class Camera2(
         put(Modes.OutputFormat.RGBA_8888, ImageFormat.YUV_420_888)
     }
 
-    private val orientations = SparseIntArray().apply {
-        put(Surface.ROTATION_0, 90)
-        put(Surface.ROTATION_90, 0)
-        put(Surface.ROTATION_180, 270)
-        put(Surface.ROTATION_270, 180)
-    }
-
     private val windowManager: WindowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
     /** Max preview width that is guaranteed by Camera2 API */
