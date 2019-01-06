@@ -76,16 +76,7 @@ internal interface CameraInterface : LifecycleOwner {
 
     fun stopVideoRecording(): Boolean
 
-    /**
-     * Switches to a specific front or back cameraId, similar to setting facing directly
-     * but supporting all cameras instead of just 2
-     */
-    fun facing(cameraId: Int)
-
-    /**
-     * Returns the current camera id
-     */
-    fun cameraId(): Int
+    fun facingByCameraId(cameraId: Int): Int
 
     /**
      * Takes in either Modes.Facing.FACING_BACK or FACING_FRONT

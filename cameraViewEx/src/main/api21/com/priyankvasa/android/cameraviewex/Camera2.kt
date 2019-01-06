@@ -37,11 +37,7 @@ import android.view.Surface
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleRegistry
 import com.priyankvasa.android.cameraviewex.extension.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import java.io.File
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
@@ -258,10 +254,6 @@ internal open class Camera2(
 
     private lateinit var cameraId: String
 
-    override fun cameraId(): Int {
-        return Integer.parseInt(cameraId)
-    }
-
     private lateinit var cameraCharacteristics: CameraCharacteristics
 
     private var camera: CameraDevice? = null
@@ -475,12 +467,22 @@ internal open class Camera2(
             }
         }
         facing.observe(this@Camera2) {
-            if (isCameraOpened) {
-                stop()
-                start()
+            if (it > Modes.Facing.FACING_FRONT) {
+                if (isCameraOpened) {
+                    stop()
+                    start(it)
+                } else {
+                    chooseCameraById(it.toString())
+                    collectCameraInfo()
+                }
             } else {
-                chooseCameraIdByFacing()
-                collectCameraInfo()
+                if (isCameraOpened) {
+                    stop()
+                    start()
+                } else {
+                    chooseCameraIdByFacing()
+                    collectCameraInfo()
+                }
             }
         }
         autoFocus.observe(this@Camera2) {
@@ -660,18 +662,13 @@ internal open class Camera2(
         }
     }
 
-    /**
-     * Switches to a specific front or back cameraId, similar to setting facing directly
-     * but supporting all cameras instead of just 2
-     */
-    override fun facing(cameraId: Int) {
-        if (isCameraOpened) {
-            stop()
-            start(cameraId)
-        } else {
-            chooseCameraById(cameraId.toString())
-            collectCameraInfo()
+    override fun facingByCameraId(cameraId: Int): Int {
+        val cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId.toString())
+        val lensFacing = cameraCharacteristics.get(CameraCharacteristics.LENS_FACING)
+        if (lensFacing == CameraCharacteristics.LENS_FACING_FRONT) {
+            return Modes.Facing.FACING_FRONT
         }
+        return Modes.Facing.FACING_BACK
     }
 
     override fun setAspectRatio(ratio: AspectRatio): Boolean {

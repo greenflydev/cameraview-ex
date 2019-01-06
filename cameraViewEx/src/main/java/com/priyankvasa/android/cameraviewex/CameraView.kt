@@ -447,35 +447,27 @@ class CameraView @JvmOverloads constructor(
     }
 
     /**
-     * Returns the current id of the camera
-     */
-    fun cameraId(): Int {
-        return camera.cameraId()
-    }
-
-    /**
      * This will switch to the next camera, looping through all back and front
      * cameras
      */
     fun nextCameraByFacing() {
-        val cameraId = camera.cameraId()
         val backCameras = cameraIdsByFacing(Modes.Facing.FACING_BACK)
         val frontCameras = cameraIdsByFacing(Modes.Facing.FACING_FRONT)
-        when (facing) {
+        when (camera.facingByCameraId(facing)) {
             Modes.Facing.FACING_BACK -> {
-                val index = backCameras.indexOf(cameraId)
+                val index = backCameras.indexOf(facing)
                 if (index + 1 == backCameras.size) {
-                    facing(Modes.Facing.FACING_FRONT, frontCameras[0])
+                    this.facing = frontCameras[0]
                 } else {
-                    facing(Modes.Facing.FACING_BACK, backCameras[index + 1])
+                    this.facing = backCameras[index + 1]
                 }
             }
             Modes.Facing.FACING_FRONT -> {
-                val index = frontCameras.indexOf(cameraId)
+                val index = frontCameras.indexOf(facing)
                 if (index + 1 == frontCameras.size) {
-                    facing(Modes.Facing.FACING_BACK, backCameras[0])
+                    this.facing = backCameras[0]
                 } else {
-                    facing(Modes.Facing.FACING_FRONT, frontCameras[index + 1])
+                    this.facing = frontCameras[index + 1]
                 }
             }
         }
@@ -497,11 +489,6 @@ class CameraView @JvmOverloads constructor(
      */
     fun focalLengths(cameraId: Int): List<Float> {
         return camera.focalLengths(cameraId)
-    }
-
-    fun facing(facing: Int, cameraId: Int) {
-        this.facing = facing
-        camera.facing(cameraId)
     }
 
     /**
