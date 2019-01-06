@@ -446,10 +446,17 @@ class CameraView @JvmOverloads constructor(
         }
     }
 
+    /**
+     * Returns the current id of the camera
+     */
     fun cameraId(): Int {
         return camera.cameraId()
     }
 
+    /**
+     * This will switch to the next camera, looping through all back and front
+     * cameras
+     */
     fun nextCameraByFacing() {
         val cameraId = camera.cameraId()
         val backCameras = cameraIdsByFacing(Modes.Facing.FACING_BACK)

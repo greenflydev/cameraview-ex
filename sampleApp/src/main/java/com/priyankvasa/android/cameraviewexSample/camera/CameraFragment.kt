@@ -218,7 +218,7 @@ open class CameraFragment : Fragment() {
              * This will switch to the next camera, looping through all back and front
              * cameras
              */
-            //camera.nextCameraByFacing()
+            camera.nextCameraByFacing()
 
             /*
              * This block provides fine grain control, giving you the camera ids for

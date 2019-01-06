@@ -724,23 +724,6 @@ internal open class Camera2(
     private fun chooseCameraIdByFacing(): Boolean {
 
         try {
-            /*
-             * If the facing value is greater than 1 then treat this case special
-             * and set the cameraId to what the facing value is.
-             */
-            val cameraIdStr = config.facing.value.toString()
-            if (config.facing.value > Modes.Facing.FACING_FRONT &&
-                    cameraManager.cameraIdList.contains(cameraIdStr)) {
-                val characteristics = cameraManager.getCameraCharacteristics(cameraIdStr)
-                val level = characteristics.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)
-                if (level != null &&
-                        level != CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY) {
-                    cameraId = cameraIdStr
-                    cameraCharacteristics = characteristics
-                    return true
-                }
-            }
-
             cameraManager.cameraIdList.run {
                 ifEmpty { throw CameraViewException("No camera available.") }
                 forEach { id ->
