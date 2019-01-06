@@ -114,8 +114,9 @@ class CameraView @JvmOverloads constructor(
     /** Display orientation detector */
     private val displayOrientationDetector: DisplayOrientationDetector =
             object : DisplayOrientationDetector(context) {
-                override fun onDisplayOrientationChanged(displayOrientation: Int) {
+                override fun onDisplayOrientationChanged(displayOrientation: Int, cameraOrientation: Int) {
                     camera.displayOrientation = displayOrientation
+                    camera.cameraOrientation = cameraOrientation
                 }
             }
 
@@ -445,6 +446,34 @@ class CameraView @JvmOverloads constructor(
         }
     }
 
+    fun cameraId(): Int {
+        return camera.cameraId()
+    }
+
+    fun nextCameraByFacing() {
+        val cameraId = camera.cameraId()
+        val backCameras = cameraIdsByFacing(Modes.Facing.FACING_BACK)
+        val frontCameras = cameraIdsByFacing(Modes.Facing.FACING_FRONT)
+        when (facing) {
+            Modes.Facing.FACING_BACK -> {
+                val index = backCameras.indexOf(cameraId)
+                if (index + 1 == backCameras.size) {
+                    facing(Modes.Facing.FACING_FRONT, frontCameras[0])
+                } else {
+                    facing(Modes.Facing.FACING_BACK, backCameras[index + 1])
+                }
+            }
+            Modes.Facing.FACING_FRONT -> {
+                val index = frontCameras.indexOf(cameraId)
+                if (index + 1 == frontCameras.size) {
+                    facing(Modes.Facing.FACING_BACK, backCameras[0])
+                } else {
+                    facing(Modes.Facing.FACING_FRONT, frontCameras[index + 1])
+                }
+            }
+        }
+    }
+
     /**
      * Takes in either Modes.Facing.FACING_BACK or FACING_FRONT
      * @return `list of camera ids` that are facing the passed in direction
@@ -461,6 +490,11 @@ class CameraView @JvmOverloads constructor(
      */
     fun focalLengths(cameraId: Int): List<Float> {
         return camera.focalLengths(cameraId)
+    }
+
+    fun facing(facing: Int, cameraId: Int) {
+        this.facing = facing
+        camera.facing(cameraId)
     }
 
     /**

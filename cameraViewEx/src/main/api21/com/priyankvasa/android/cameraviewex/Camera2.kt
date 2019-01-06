@@ -34,6 +34,7 @@ import android.os.HandlerThread
 import android.renderscript.RenderScript
 import android.util.SparseIntArray
 import android.view.Surface
+import android.view.WindowManager
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleRegistry
 import com.priyankvasa.android.cameraviewex.extension.*
@@ -77,6 +78,15 @@ internal open class Camera2(
         put(Modes.OutputFormat.YUV_420_888, ImageFormat.YUV_420_888)
         put(Modes.OutputFormat.RGBA_8888, ImageFormat.YUV_420_888)
     }
+
+    private val orientations = SparseIntArray().apply {
+        put(Surface.ROTATION_0, 90)
+        put(Surface.ROTATION_90, 0)
+        put(Surface.ROTATION_180, 270)
+        put(Surface.ROTATION_270, 180)
+    }
+
+    private val windowManager: WindowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
     /** Max preview width that is guaranteed by Camera2 API */
     private val maxPreviewWidth = 1920
@@ -251,6 +261,10 @@ internal open class Camera2(
 
     private lateinit var cameraId: String
 
+    override fun cameraId(): Int {
+        return Integer.parseInt(cameraId)
+    }
+
     private lateinit var cameraCharacteristics: CameraCharacteristics
 
     private var camera: CameraDevice? = null
@@ -282,6 +296,8 @@ internal open class Camera2(
             field = value
             preview.setDisplayOrientation(value)
         }
+
+    override var cameraOrientation: Int = 0
 
     override val isCameraOpened: Boolean get() = camera != null
 
@@ -647,6 +663,20 @@ internal open class Camera2(
         }
     }
 
+    /**
+     * Switches to a specific front or back cameraId, similar to setting facing directly
+     * but supporting all cameras instead of just 2
+     */
+    override fun facing(cameraId: Int) {
+        if (isCameraOpened) {
+            stop()
+            start(cameraId)
+        } else {
+            chooseCameraById(cameraId.toString())
+            collectCameraInfo()
+        }
+    }
+
     override fun setAspectRatio(ratio: AspectRatio): Boolean {
 
         if (!ratio.isValid()) {
@@ -811,9 +841,14 @@ internal open class Camera2(
      */
     private fun chooseCameraById(cameraId: String): Boolean {
         if (cameraManager.cameraIdList.contains(cameraId)) {
-            this.cameraId = cameraId
-            cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
-            return true
+            val cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
+            val level = cameraCharacteristics.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)
+            if (level != null &&
+                    level != CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY) {
+                this.cameraId = cameraId
+                this.cameraCharacteristics = cameraCharacteristics
+                return true
+            }
         }
         return false
     }
@@ -1124,11 +1159,11 @@ internal open class Camera2(
     // Calculate output orientation based on device sensor orientation.
     private val outputOrientation: Int
         get() {
-            val sensorOrientation = cameraCharacteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)
+            var sensorOrientation = cameraCharacteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)
                     ?: throw CameraViewException("Camera characteristics not available")
 
             return (sensorOrientation
-                    + (displayOrientation * if (config.facing.value == Modes.Facing.FACING_FRONT) 1 else -1)
+                    + (cameraOrientation * if (config.facing.value == Modes.Facing.FACING_FRONT) -1 else 1)
                     + 360) % 360
         }
 
@@ -1186,6 +1221,7 @@ internal open class Camera2(
         val videoSize = chooseOptimalSize(Template.Record)
 
         mediaRecorder = (mediaRecorder?.apply { reset() } ?: MediaRecorder()).apply {
+
             runCatching { setOrientationHint(outputOrientation) }
                     .onFailure { t ->
                         // Angle outputOrientation is not supported

@@ -202,10 +202,59 @@ open class CameraFragment : Fragment() {
         }
 
         ivCameraSwitch.setOnClickListener {
+
+            /*
+             * This block will switch between the default front and back
+             * camera. If there are more than two cameras it will only switch between 2.
+             */
+            /*
             camera.facing = when (camera.facing) {
                 Modes.Facing.FACING_BACK -> Modes.Facing.FACING_FRONT
                 else -> Modes.Facing.FACING_BACK
             }
+            */
+
+            /*
+             * This will switch to the next camera, looping through all back and front
+             * cameras
+             */
+            //camera.nextCameraByFacing()
+
+            /*
+             * This block provides fine grain control, giving you the camera ids for
+             * the back or front. You can provide controls for the user to swap between
+             * the cameras.
+             *
+             * Example: LG V40 has three rear cameras: regular, zoom and wide angle
+             */
+            /*
+            var cameraId = camera.cameraId()
+            val backCameras = camera.cameraIdsByFacing(Modes.Facing.FACING_BACK)
+            val frontCameras = camera.cameraIdsByFacing(Modes.Facing.FACING_FRONT)
+            when (camera.facing) {
+                Modes.Facing.FACING_BACK -> {
+                    val index = backCameras.indexOf(cameraId)
+                    if (index + 1 == backCameras.size) {
+                        camera.facing(Modes.Facing.FACING_FRONT, frontCameras[0])
+                    } else {
+                        camera.facing(Modes.Facing.FACING_BACK, backCameras[index + 1])
+                    }
+                }
+                Modes.Facing.FACING_FRONT -> {
+                    val index = frontCameras.indexOf(cameraId)
+                    if (index + 1 == frontCameras.size) {
+                        camera.facing(Modes.Facing.FACING_BACK, backCameras[0])
+                    } else {
+                        camera.facing(Modes.Facing.FACING_FRONT, frontCameras[index + 1])
+                    }
+                }
+            }
+            cameraId = camera.cameraId()
+            camera.focalLengths(cameraId).forEach {
+                println("Focal length for cameraId=$cameraId, focal length=$it")
+            }
+            */
+
             updateViewState()
         }
 

@@ -49,6 +49,10 @@ internal class Camera1(
 
     private var cameraId: Int = Modes.Facing.FACING_BACK
 
+    override fun cameraId(): Int {
+        return cameraId
+    }
+
     private val isPictureCaptureInProgress = AtomicBoolean(false)
 
     var camera: Camera? = null
@@ -102,6 +106,8 @@ internal class Camera1(
                 }
             }
         }
+
+    override var cameraOrientation: Int = 0
 
     override val isCameraOpened: Boolean get() = camera != null
 
@@ -214,6 +220,13 @@ internal class Camera1(
         runCatching { camera?.stopPreview() }.onFailure { listener.onCameraError(it as Exception) }
         showingPreview = false
         releaseCamera()
+    }
+
+    override fun facing(cameraId: Int) {
+        if (isCameraOpened) {
+            stop()
+            start(cameraId)
+        }
     }
 
     // Suppresses Camera#setPreviewTexture
