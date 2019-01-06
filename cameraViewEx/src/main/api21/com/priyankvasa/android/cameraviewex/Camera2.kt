@@ -34,7 +34,6 @@ import android.os.HandlerThread
 import android.renderscript.RenderScript
 import android.util.SparseIntArray
 import android.view.Surface
-import android.view.WindowManager
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleRegistry
 import com.priyankvasa.android.cameraviewex.extension.*
@@ -78,9 +77,7 @@ internal open class Camera2(
         put(Modes.OutputFormat.YUV_420_888, ImageFormat.YUV_420_888)
         put(Modes.OutputFormat.RGBA_8888, ImageFormat.YUV_420_888)
     }
-
-    private val windowManager: WindowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-
+    
     /** Max preview width that is guaranteed by Camera2 API */
     private val maxPreviewWidth = 1920
 
