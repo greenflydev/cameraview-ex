@@ -736,9 +736,6 @@ internal open class Camera2(
     /**
      * Chooses a camera ID by the specified camera facing ([CameraConfiguration.facing]).
      *
-     * Phones can have more than two cameras. If config.facing.value is greater than 1
-     * (meaning not BACK or FRONT) then setup that cameraId.
-     *
      * This rewrites [cameraId], [cameraCharacteristics], and optionally
      * [CameraConfiguration.facing].
      */

@@ -308,16 +308,6 @@ internal class Camera1(
      * This rewrites [.cameraId] and [.cameraInfo].
      */
     private fun chooseCamera() {
-        /*
-         * If the facing value is greater than 1 then treat this case special
-         * and set the cameraId to what the facing value is.
-         */
-        if (config.facing.value > Modes.Facing.FACING_FRONT &&
-                config.facing.value < Camera.getNumberOfCameras()) {
-            cameraId = config.facing.value
-            return
-        }
-
         for (i in 0..(Camera.getNumberOfCameras()-1)) {
             Camera.getCameraInfo(i, cameraInfo)
             if (cameraInfo.facing == facing) {
