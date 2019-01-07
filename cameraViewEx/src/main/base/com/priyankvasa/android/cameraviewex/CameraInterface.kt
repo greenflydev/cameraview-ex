@@ -84,12 +84,6 @@ internal interface CameraInterface : LifecycleOwner {
      */
     fun cameraIdsByFacing(facing: Int): List<Int>
 
-    /**
-     * Takes in a cameraId
-     * @return `list of focal lengths` for the cameraId
-     */
-    fun focalLengths(cameraId: Int): List<Float>
-
     interface Listener {
         suspend fun onCameraOpened()
         suspend fun onCameraClosed()

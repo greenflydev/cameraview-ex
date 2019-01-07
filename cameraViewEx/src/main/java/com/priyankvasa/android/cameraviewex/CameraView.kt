@@ -451,8 +451,8 @@ class CameraView @JvmOverloads constructor(
      * cameras
      */
     fun nextCameraByFacing() {
-        val backCameras = cameraIdsByFacing(Modes.Facing.FACING_BACK)
-        val frontCameras = cameraIdsByFacing(Modes.Facing.FACING_FRONT)
+        val backCameras = camera.cameraIdsByFacing(Modes.Facing.FACING_BACK)
+        val frontCameras = camera.cameraIdsByFacing(Modes.Facing.FACING_FRONT)
         when (camera.facingByCameraId(facing)) {
             Modes.Facing.FACING_BACK -> {
                 val index = backCameras.indexOf(facing)
@@ -471,24 +471,6 @@ class CameraView @JvmOverloads constructor(
                 }
             }
         }
-    }
-
-    /**
-     * Takes in either Modes.Facing.FACING_BACK or FACING_FRONT
-     * @return `list of camera ids` that are facing the passed in direction
-     * This is used to support devices with multiple back or front cameras
-     */
-    fun cameraIdsByFacing(facing: Int): List<Int> {
-        return camera.cameraIdsByFacing(facing)
-    }
-
-    /**
-     * Takes in a cameraId and returns the focal lengths for the camera
-     * @return `list of focal lengths` for the cameraId
-     * This is used for devices with more than one front of back camera.
-     */
-    fun focalLengths(cameraId: Int): List<Float> {
-        return camera.focalLengths(cameraId)
     }
 
     /**

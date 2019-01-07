@@ -32,9 +32,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.io.File
-import java.util.SortedSet
+import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.collections.ArrayList
 
 internal class Camera1(
         override val listener: CameraInterface.Listener,
@@ -337,14 +336,6 @@ internal class Camera1(
             }
         }
         return ids
-    }
-
-    /**
-     * Gets a list of focal lengths for the passed in cameraId
-     * TODO: Not supporting for Camera1
-     */
-    override fun focalLengths(cameraId: Int): List<Float> {
-        return ArrayList<Float>()
     }
 
     /**

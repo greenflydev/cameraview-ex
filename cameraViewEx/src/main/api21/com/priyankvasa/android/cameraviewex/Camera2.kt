@@ -816,17 +816,6 @@ internal open class Camera2(
     }
 
     /**
-     * Gets a list of focal lengths for the passed in cameraId
-     */
-    override fun focalLengths(cameraId: Int): List<Float> {
-        val focalLengths = mutableListOf<Float>()
-        val characteristics = cameraManager.getCameraCharacteristics(cameraId.toString())
-        characteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS)?.
-                forEach { focalLengths.add(it) }
-        return focalLengths
-    }
-
-    /**
      * This will choose a camera based on a passed in cameraId
      * Called from [start(cameraId)]
      */
