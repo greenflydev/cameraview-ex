@@ -484,22 +484,12 @@ internal open class Camera2(
             }
         }
         facing.observe(this@Camera2) {
-            if (it > Modes.Facing.FACING_FRONT) {
-                if (isCameraOpened) {
-                    stop()
-                    start(it)
-                } else {
-                    chooseCameraById(it.toString())
-                    collectCameraInfo()
-                }
+            if (isCameraOpened) {
+                stop()
+                start()
             } else {
-                if (isCameraOpened) {
-                    stop()
-                    start()
-                } else {
-                    chooseCameraIdByFacing()
-                    collectCameraInfo()
-                }
+                chooseCameraIdByFacing()
+                collectCameraInfo()
             }
         }
         autoFocus.observe(this@Camera2) {
@@ -679,6 +669,9 @@ internal open class Camera2(
         }
     }
 
+    /**
+     * Returns Modes.Facing.FACING_FRONT or BACK for the passed in cameraId
+     */
     override fun facingByCameraId(cameraId: Int): Int {
         val cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId.toString())
         val lensFacing = cameraCharacteristics.get(CameraCharacteristics.LENS_FACING)
