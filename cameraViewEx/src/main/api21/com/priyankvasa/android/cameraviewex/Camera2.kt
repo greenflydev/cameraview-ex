@@ -484,22 +484,12 @@ internal open class Camera2(
             }
         }
         facing.observe(this@Camera2) {
-            if (it > Modes.Facing.FACING_FRONT) {
-                if (isCameraOpened) {
-                    stop()
-                    start(it)
-                } else {
-                    chooseCameraById(it.toString())
-                    collectCameraInfo()
-                }
+            if (isCameraOpened) {
+                stop()
+                start(it)
             } else {
-                if (isCameraOpened) {
-                    stop()
-                    start()
-                } else {
-                    chooseCameraIdByFacing()
-                    collectCameraInfo()
-                }
+                chooseCameraById(it.toString())
+                collectCameraInfo()
             }
         }
         autoFocus.observe(this@Camera2) {
