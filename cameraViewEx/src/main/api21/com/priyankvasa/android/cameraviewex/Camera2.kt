@@ -184,9 +184,12 @@ internal open class Camera2(
 
             GlobalScope.launch(Dispatchers.Main) { mediaRecorder?.start() }
                     .invokeOnCompletion { t ->
-                        if (t != null) {
-                            listener.onCameraError(CameraViewException("Camera device is already in use", t))
-                            isVideoRecording = false
+                        when (t) {
+                            null -> listener.onVideoRecordStarted()
+                            else -> {
+                                listener.onCameraError(CameraViewException("Camera device is already in use", t))
+                                isVideoRecording = false
+                            }
                         }
                     }
         }
@@ -290,6 +293,8 @@ internal open class Camera2(
     private val pictureSizes = SizeMap()
 
     private val videoSizes = SizeMap()
+
+    override val supportedVideoSizes = SizeMap()
 
     private val startPreviewJob: Job = Job()
 
@@ -859,8 +864,12 @@ internal open class Camera2(
         supportedAspectRatios.run { if (!contains(config.aspectRatio.value)) config.aspectRatio.value = iterator().next() }
 
         videoSizes.clear()
+        supportedVideoSizes.clear()
 
-        map.getOutputSizes(MediaRecorder::class.java).forEach { videoSizes.add(Size(it.width, it.height)) }
+        map.getOutputSizes(MediaRecorder::class.java).forEach {
+            videoSizes.add(Size(it.width, it.height))
+            supportedVideoSizes.add(Size(it.width, it.height))
+        }
     }
 
     protected open fun collectPictureSizes(sizes: SizeMap, map: StreamConfigurationMap) {
@@ -1190,7 +1199,15 @@ internal open class Camera2(
 
         isVideoRecording = true
 
-        val videoSize = chooseOptimalSize(Template.Record)
+        val videoSize = when (config.videoSize) {
+            null -> chooseOptimalSize(Template.Record)
+            else -> {
+                if (videoSizes.sizes(this.config.aspectRatio.value).contains(config.videoSize)) {
+                    config.videoSize
+                }
+                chooseOptimalSize(Template.Record)
+            }
+        }
 
         mediaRecorder = (mediaRecorder?.apply { reset() } ?: MediaRecorder()).apply {
             runCatching { setOrientationHint(outputOrientation) }
@@ -1229,6 +1246,14 @@ internal open class Camera2(
                 listener.onCameraError(t as Exception)
                 isVideoRecording = false
                 return
+            }
+        }
+
+        mediaRecorder?.setOnInfoListener { mediaRecorder, what, extra ->
+            when (what) {
+                MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED -> {
+                    stopVideoRecording()
+                }
             }
         }
 
@@ -1322,6 +1347,7 @@ internal open class Camera2(
     }
 
     override fun stopVideoRecording(): Boolean = runCatching {
+        listener.onVideoRecordStopped()
         mediaRecorder?.stop()
         mediaRecorder?.reset()
         captureSession?.close()
@@ -1330,7 +1356,9 @@ internal open class Camera2(
     }.getOrElse { t ->
         listener.onCameraError(t as Exception)
         false
-    }.also { isVideoRecording = false }
+    }.also {
+        isVideoRecording = false
+    }
 
     /**
      * Unlocks the auto-focus and restart camera preview. This is supposed to be called after

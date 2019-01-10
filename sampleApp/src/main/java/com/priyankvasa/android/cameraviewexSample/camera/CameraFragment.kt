@@ -16,9 +16,11 @@ import com.google.firebase.ml.vision.FirebaseVision
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetectorOptions
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
+import com.priyankvasa.android.cameraviewex.AspectRatio
 import com.priyankvasa.android.cameraviewex.AudioEncoder
 import com.priyankvasa.android.cameraviewex.ErrorLevel
 import com.priyankvasa.android.cameraviewex.Modes
+import com.priyankvasa.android.cameraviewex.Size
 import com.priyankvasa.android.cameraviewexSample.R
 import com.priyankvasa.android.cameraviewexSample.extensions.toast
 import kotlinx.android.synthetic.main.fragment_camera.*
@@ -31,6 +33,9 @@ import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 
 open class CameraFragment : Fragment() {
+
+    private var totalTime: Long = 0
+    private var recordingTime: Long =0
 
     private var isVideoRecording = false
 
@@ -55,22 +60,29 @@ open class CameraFragment : Fragment() {
         if (isVideoRecording) {
             if (camera.stopVideoRecording()) context?.toast("Video saved to ${videoFile?.absolutePath}")
             else context?.toast("Failed to save video!")
-            ivPlayPause.visibility = View.GONE
-            ivPlayPause.isActivated = false
-            ivCaptureButton.isActivated = false
+            stoppedRecording()
         } else {
+            val aspectRatio = AspectRatio.of(16, 9)
+            camera.supportedVideoSizes().sizes(aspectRatio).forEach { size ->
+                println("VIDEO SIZE: " + size.width + " : " + size.height)
+            }
+            val size = Size(1280, 720)
+
+            totalTime = System.currentTimeMillis()
             videoFile = nextVideoFile.also { outputFile ->
                 camera.startVideoRecording(outputFile) {
+                    maxDuration = 3000
                     audioEncoder = AudioEncoder.Aac
-                    videoFrameRate = 60
+                    videoFrameRate = 30
                     videoStabilization = true
+                    videoSize = size
                 }
             }
             ivPlayPause.visibility = View.VISIBLE
             ivPlayPause.isActivated = true
             ivCaptureButton.isActivated = true
+            isVideoRecording = true
         }
-        isVideoRecording = !isVideoRecording
     }
 
     private val barcodeDetectorOptions = FirebaseVisionBarcodeDetectorOptions.Builder()
@@ -98,7 +110,17 @@ open class CameraFragment : Fragment() {
 
             val decoding = AtomicBoolean(false)
 
-            addCameraOpenedListener { Timber.i("Camera opened.") }
+            addCameraOpenedListener {
+                Timber.i("Camera opened.")
+
+                camera.supportedAspectRatios.forEach {
+                    System.out.println("ASPECT " + it.x + " : " + it.y)
+                }
+
+                val aspectRatio = AspectRatio.of(16, 9)
+
+                camera.aspectRatio = aspectRatio
+            }
 
             val decodeSuccessListener = listener@{ barcodes: MutableList<FirebaseVisionBarcode> ->
                 if (barcodes.isEmpty()) {
@@ -136,6 +158,19 @@ open class CameraFragment : Fragment() {
             }
 
             addCameraClosedListener { Timber.i("Camera closed.") }
+
+            addVideoRecordStoppedListener {
+                val time = System.currentTimeMillis()
+                totalTime = time - totalTime
+                recordingTime = time - recordingTime
+                println("DEBUG VIDEO WAS RECORDED total=$totalTime, recording=$recordingTime")
+                stoppedRecording()
+            }
+
+            addVideoRecordStartedListener {
+                println("DEBUG VIDEO WAS STARTED")
+                recordingTime = System.currentTimeMillis()
+            }
         }
     }
 
@@ -284,5 +319,12 @@ open class CameraFragment : Fragment() {
     override fun onDestroyView() {
         camera.run { if (isCameraOpened) stop(removeAllListeners = true) }
         super.onDestroyView()
+    }
+
+    private fun stoppedRecording() {
+        ivPlayPause.visibility = View.GONE
+        ivPlayPause.isActivated = false
+        ivCaptureButton.isActivated = false
+        isVideoRecording = false
     }
 }

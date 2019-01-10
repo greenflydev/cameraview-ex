@@ -38,6 +38,8 @@ internal interface CameraInterface : LifecycleOwner {
 
     val supportedAspectRatios: Set<AspectRatio>
 
+    val supportedVideoSizes: SizeMap
+
     var displayOrientation: Int
 
     var cameraOrientation: Int
@@ -88,6 +90,8 @@ internal interface CameraInterface : LifecycleOwner {
         suspend fun onCameraOpened()
         suspend fun onCameraClosed()
         fun onPictureTaken(imageData: ByteArray)
+        fun onVideoRecordStarted()
+        fun onVideoRecordStopped()
         fun onCameraError(
                 e: Exception,
                 errorLevel: ErrorLevel = ErrorLevel.Error,

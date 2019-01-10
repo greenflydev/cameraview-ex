@@ -17,13 +17,12 @@
 package com.priyankvasa.android.cameraviewex
 
 import androidx.collection.ArrayMap
-import java.util.SortedSet
-import java.util.TreeSet
+import java.util.*
 
 /**
  * A collection class that automatically groups [Size]s by their [AspectRatio]s.
  */
-internal class SizeMap {
+class SizeMap {
 
     private val ratios = ArrayMap<AspectRatio, SortedSet<Size>>()
 
