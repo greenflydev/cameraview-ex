@@ -57,6 +57,7 @@ class VideoConfiguration {
     /** Max length a video can be */
     var maxDuration: Int = DEFAULT_MAX_DURATION
 
+    /** Optional video size to record in */
     var videoSize: Size? = null
 
     companion object {

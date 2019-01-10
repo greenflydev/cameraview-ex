@@ -292,8 +292,6 @@ internal open class Camera2(
 
     private val pictureSizes = SizeMap()
 
-    private val videoSizes = SizeMap()
-
     override val supportedVideoSizes = SizeMap()
 
     private val startPreviewJob: Job = Job()
@@ -863,11 +861,9 @@ internal open class Camera2(
 
         supportedAspectRatios.run { if (!contains(config.aspectRatio.value)) config.aspectRatio.value = iterator().next() }
 
-        videoSizes.clear()
         supportedVideoSizes.clear()
 
         map.getOutputSizes(MediaRecorder::class.java).forEach {
-            videoSizes.add(Size(it.width, it.height))
             supportedVideoSizes.add(Size(it.width, it.height))
         }
     }
@@ -1002,7 +998,7 @@ internal open class Camera2(
 
         val candidates = when (template) {
             Template.Preview -> previewSizes.sizes(config.aspectRatio.value)
-            Template.Record -> videoSizes.sizes(config.aspectRatio.value)
+            Template.Record -> supportedVideoSizes.sizes(config.aspectRatio.value)
         }
 
         // Pick the smallest of those big enough
@@ -1199,10 +1195,14 @@ internal open class Camera2(
 
         isVideoRecording = true
 
+        /*
+         * If a videoSize is set then use that size IF it is an available size.
+         * Otherwise default to choosing an optimal size.
+         */
         val videoSize = when (config.videoSize) {
             null -> chooseOptimalSize(Template.Record)
             else -> {
-                if (videoSizes.sizes(this.config.aspectRatio.value).contains(config.videoSize)) {
+                if (supportedVideoSizes.sizes(this.config.aspectRatio.value).contains(config.videoSize)) {
                     config.videoSize
                 }
                 chooseOptimalSize(Template.Record)
