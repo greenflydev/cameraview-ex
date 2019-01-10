@@ -17,7 +17,9 @@
 package com.priyankvasa.android.cameraviewex
 
 import androidx.collection.ArrayMap
-import java.util.*
+import java.util.SortedSet
+import java.util.TreeSet
+
 
 /**
  * A collection class that automatically groups [Size]s by their [AspectRatio]s.

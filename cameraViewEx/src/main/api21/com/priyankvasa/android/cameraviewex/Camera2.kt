@@ -91,7 +91,7 @@ internal open class Camera2(
         put(Modes.OutputFormat.YUV_420_888, ImageFormat.YUV_420_888)
         put(Modes.OutputFormat.RGBA_8888, ImageFormat.YUV_420_888)
     }
-    
+
     /** Max preview width that is guaranteed by Camera2 API */
     private val maxPreviewWidth = 1920
 
@@ -1356,9 +1356,7 @@ internal open class Camera2(
     }.getOrElse { t ->
         listener.onCameraError(t as Exception)
         false
-    }.also {
-        isVideoRecording = false
-    }
+    }.also { isVideoRecording = false }
 
     /**
      * Unlocks the auto-focus and restart camera preview. This is supposed to be called after
