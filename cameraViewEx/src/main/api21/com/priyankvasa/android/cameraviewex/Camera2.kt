@@ -1357,6 +1357,7 @@ internal open class Camera2(
     override fun stopVideoRecording(): Boolean = runCatching {
         listener.onVideoRecordStopped()
         mediaRecorder?.stop()
+        listener.onVideoRecordStopped()
         mediaRecorder?.reset()
         captureSession?.close()
         startPreviewCaptureSession()
