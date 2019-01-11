@@ -63,10 +63,11 @@ open class CameraFragment : Fragment() {
             stoppedRecording()
         } else {
             val aspectRatio = AspectRatio.of(16, 9)
-            camera.supportedVideoSizes().sizes(aspectRatio).forEach { size ->
-                println("VIDEO SIZE: " + size.width + " : " + size.height)
-            }
-            val size = Size(1280, 720)
+            //camera.supportedVideoSizes().sizes(aspectRatio).forEach { size ->
+            //    println("VIDEO SIZE: " + size.width + " : " + size.height)
+            //}
+            //val size = Size(1280, 720)
+            val size = Size(176, 144)
 
             totalTime = System.currentTimeMillis()
             videoFile = nextVideoFile.also { outputFile ->
@@ -113,11 +114,14 @@ open class CameraFragment : Fragment() {
             addCameraOpenedListener {
                 Timber.i("Camera opened.")
 
-                camera.supportedAspectRatios.forEach {
-                    System.out.println("ASPECT " + it.x + " : " + it.y)
-                }
+                //camera.supportedAspectRatios.forEach {
+                //    System.out.println("Aspect ratio: " + it.x + " : " + it.y)
+                //    camera.supportedVideoSizes().sizes(it).forEach { size ->
+                //        println("Video size: " + size.width + " : " + size.height)
+                //    }
+                //}
 
-                val aspectRatio = AspectRatio.of(16, 9)
+                val aspectRatio = AspectRatio.of( 4, 3)
 
                 camera.aspectRatio = aspectRatio
             }
