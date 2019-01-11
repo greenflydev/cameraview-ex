@@ -292,7 +292,7 @@ internal open class Camera2(
 
     private val pictureSizes = SizeMap()
 
-    override val supportedVideoSizes = SizeMap()
+    private val videoSizes = SizeMap()
 
     private val startPreviewJob: Job = Job()
 
@@ -861,11 +861,9 @@ internal open class Camera2(
 
         supportedAspectRatios.run { if (!contains(config.aspectRatio.value)) config.aspectRatio.value = iterator().next() }
 
-        supportedVideoSizes.clear()
+        videoSizes.clear()
 
-        map.getOutputSizes(MediaRecorder::class.java).forEach {
-            supportedVideoSizes.add(Size(it.width, it.height))
-        }
+        map.getOutputSizes(MediaRecorder::class.java).forEach { videoSizes.add(Size(it.width, it.height)) }
     }
 
     protected open fun collectPictureSizes(sizes: SizeMap, map: StreamConfigurationMap) {
@@ -1002,7 +1000,7 @@ internal open class Camera2(
 
         val candidates = when (template) {
             Template.Preview -> previewSizes.sizes(aspectRatio)
-            Template.Record -> supportedVideoSizes.sizes(aspectRatio)
+            Template.Record -> videoSizes.sizes(aspectRatio)
         }
 
         // Pick the smallest of those big enough
@@ -1389,13 +1387,13 @@ internal open class Camera2(
             VideoSize.SizeMax16x9 -> chooseOptimalSize(AspectRatio.Aspect16x9, Template.Record)
             VideoSize.SizeMax4x3 -> chooseOptimalSize(AspectRatio.Aspect4x3, Template.Record)
             VideoSize.Size1080p -> {
-                when (supportedVideoSizes.sizes(AspectRatio.Aspect16x9).contains(VideoSize.Size1080p)) {
+                when (videoSizes.sizes(AspectRatio.Aspect16x9).contains(VideoSize.Size1080p)) {
                     false -> chooseOptimalSize(Template.Record)
                     true -> VideoSize.Size1080p
                 }
             }
             VideoSize.Size720p -> {
-                when (supportedVideoSizes.sizes(AspectRatio.Aspect16x9).contains(VideoSize.Size720p)) {
+                when (videoSizes.sizes(AspectRatio.Aspect16x9).contains(VideoSize.Size720p)) {
                     false -> chooseOptimalSize(Template.Record)
                     true -> VideoSize.Size720p
                 }
