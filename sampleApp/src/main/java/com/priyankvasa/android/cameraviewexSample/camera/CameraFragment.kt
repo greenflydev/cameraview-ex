@@ -76,7 +76,7 @@ open class CameraFragment : Fragment() {
                     audioEncoder = AudioEncoder.Aac
                     videoFrameRate = 30
                     videoStabilization = true
-                    videoSize = VideoSize.SizeMax4x3
+                    videoSize = VideoSize.Size1080p
                 }
             }
             ivPlayPause.visibility = View.VISIBLE
