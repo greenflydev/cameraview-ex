@@ -20,7 +20,7 @@ import com.priyankvasa.android.cameraviewex.AspectRatio
 import com.priyankvasa.android.cameraviewex.AudioEncoder
 import com.priyankvasa.android.cameraviewex.ErrorLevel
 import com.priyankvasa.android.cameraviewex.Modes
-import com.priyankvasa.android.cameraviewex.Size
+import com.priyankvasa.android.cameraviewex.VideoSize
 import com.priyankvasa.android.cameraviewexSample.R
 import com.priyankvasa.android.cameraviewexSample.extensions.toast
 import kotlinx.android.synthetic.main.fragment_camera.*
@@ -67,7 +67,7 @@ open class CameraFragment : Fragment() {
             //    println("VIDEO SIZE: " + size.width + " : " + size.height)
             //}
             //val size = Size(1280, 720)
-            val size = Size(176, 144)
+            //val size = Size(176, 144)
 
             totalTime = System.currentTimeMillis()
             videoFile = nextVideoFile.also { outputFile ->
@@ -76,7 +76,7 @@ open class CameraFragment : Fragment() {
                     audioEncoder = AudioEncoder.Aac
                     videoFrameRate = 30
                     videoStabilization = true
-                    videoSize = size
+                    videoSize = VideoSize.SizeMax4x3
                 }
             }
             ivPlayPause.visibility = View.VISIBLE

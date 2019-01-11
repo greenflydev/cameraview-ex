@@ -17,10 +17,12 @@
 package com.priyankvasa.android.cameraviewex
 
 /**
- * Immutable class for describing width and height dimensions in pixels.
+ * Class for common video resolutions
  */
-sealed class VideoSize {
-    object MAX : VideoSize()
-    object P1080_16X9 : VideoSize()
-    object P720_16X9 : VideoSize()
+sealed class VideoSize(val size: Size) : Size(size.width, size.height) {
+    object SizeMax : VideoSize(Size(0, 0))
+    object SizeMax16x9 : VideoSize(Size(16, 9))
+    object SizeMax4x3 : VideoSize(Size(4, 3))
+    object Size1080p : VideoSize(Size(1920, 1080))
+    object Size720p : VideoSize(Size(1280, 720))
 }
