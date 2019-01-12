@@ -1294,7 +1294,8 @@ internal open class Camera2(
                     set(CaptureRequest.CONTROL_AF_MODE, afMode)
                     set(CaptureRequest.CONTROL_AWB_MODE, previewRequestBuilder[CaptureRequest.CONTROL_AWB_MODE])
 
-                    if (this@Camera2.config.opticalStabilization.value) {
+                    if (this@Camera2.config.opticalStabilization.value &&
+                            cameraCharacteristics.isOisSupported()) {
                         set(
                                 CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE,
                                 previewRequestBuilder[CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE]
