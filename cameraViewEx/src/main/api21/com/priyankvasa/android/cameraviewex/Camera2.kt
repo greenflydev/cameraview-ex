@@ -306,11 +306,28 @@ internal open class Camera2(
             preview.setDisplayOrientation(value)
         }
 
+    override var cameraOrientation: Int = 0
+
     override val isCameraOpened: Boolean get() = camera != null
 
     override var isVideoRecording: Boolean = false
 
     private val internalFacing: Int get() = internalFacings[config.facing.value]
+
+    override val cameraMap: CameraMap = CameraMap().apply {
+        cameraManager.cameraIdList.forEach { cameraId ->
+            val characteristics = cameraManager.getCameraCharacteristics(cameraId)
+            val level = characteristics.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)
+            if (level != null && level != CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY) {
+                when (characteristics.get(CameraCharacteristics.LENS_FACING)) {
+                    CameraCharacteristics.LENS_FACING_BACK ->
+                        this.add(Modes.Facing.FACING_BACK, cameraId, characteristics)
+                    CameraCharacteristics.LENS_FACING_FRONT ->
+                        this.add(Modes.Facing.FACING_FRONT, cameraId, characteristics)
+                }
+            }
+        }
+    }
 
     override val supportedAspectRatios: Set<AspectRatio> get() = previewSizes.ratios()
 
@@ -487,9 +504,9 @@ internal open class Camera2(
         facing.observe(this@Camera2) {
             if (isCameraOpened) {
                 stop()
-                start()
+                start(it)
             } else {
-                chooseCameraIdByFacing()
+                chooseCameraById(it.toString())
                 collectCameraInfo()
             }
         }
@@ -637,6 +654,19 @@ internal open class Camera2(
         return true
     }
 
+    /**
+     * Can be used to open the camera to a specified cameraId
+     */
+    override fun start(cameraId: Int): Boolean {
+        cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)
+        if (!chooseCameraById(cameraId.toString())) return false
+        if (backgroundThread == null && backgroundHandler == null) startBackgroundThread()
+        collectCameraInfo()
+        prepareImageReader()
+        startOpeningCamera()
+        return true
+    }
+
     override fun stop() {
         try {
             cameraOpenCloseLock.acquire()
@@ -755,6 +785,24 @@ internal open class Camera2(
             listener.onCameraError(CameraViewException("Failed to get a list of camera devices", e))
             return false
         }
+    }
+
+    /**
+     * This will choose a camera based on a passed in cameraId
+     * Called from [start(cameraId)]
+     */
+    private fun chooseCameraById(cameraId: String): Boolean {
+        if (cameraManager.cameraIdList.contains(cameraId)) {
+            val cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
+            val level = cameraCharacteristics.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)
+            if (level != null &&
+                    level != CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY) {
+                this.cameraId = cameraId
+                this.cameraCharacteristics = cameraCharacteristics
+                return true
+            }
+        }
+        return false
     }
 
     /**
@@ -1070,7 +1118,7 @@ internal open class Camera2(
                     ?: throw CameraViewException("Camera characteristics not available")
 
             return (sensorOrientation
-                    + (displayOrientation * if (config.facing.value == Modes.Facing.FACING_FRONT) 1 else -1)
+                    + (cameraOrientation * if (config.facing.value == Modes.Facing.FACING_FRONT) -1 else 1)
                     + 360) % 360
         }
 

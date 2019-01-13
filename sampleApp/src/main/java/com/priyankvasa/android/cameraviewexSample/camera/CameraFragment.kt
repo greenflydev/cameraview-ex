@@ -16,6 +16,7 @@ import com.google.firebase.ml.vision.FirebaseVision
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetectorOptions
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
+import com.priyankvasa.android.cameraviewex.AspectRatio
 import com.priyankvasa.android.cameraviewex.AudioEncoder
 import com.priyankvasa.android.cameraviewex.ErrorLevel
 import com.priyankvasa.android.cameraviewex.Modes
@@ -32,6 +33,9 @@ import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 
 open class CameraFragment : Fragment() {
+
+    private var totalTime: Long = 0
+    private var recordingTime: Long =0
 
     private var isVideoRecording = false
 
@@ -56,23 +60,30 @@ open class CameraFragment : Fragment() {
         if (isVideoRecording) {
             if (camera.stopVideoRecording()) context?.toast("Video saved to ${videoFile?.absolutePath}")
             else context?.toast("Failed to save video!")
-            ivPlayPause.visibility = View.GONE
-            ivPlayPause.isActivated = false
-            ivCaptureButton.isActivated = false
+            stoppedRecording()
         } else {
+            val aspectRatio = AspectRatio.of(16, 9)
+            //camera.supportedVideoSizes().sizes(aspectRatio).forEach { size ->
+            //    println("VIDEO SIZE: " + size.width + " : " + size.height)
+            //}
+            //val size = Size(1280, 720)
+            //val size = Size(176, 144)
+
+            totalTime = System.currentTimeMillis()
             videoFile = nextVideoFile.also { outputFile ->
                 camera.startVideoRecording(outputFile) {
+                    maxDuration = 3000
                     audioEncoder = AudioEncoder.Aac
-                    videoFrameRate = 60
+                    videoFrameRate = 30
                     videoStabilization = true
-                    videoSize = VideoSize.Max
+                    videoSize = VideoSize.P720
                 }
             }
             ivPlayPause.visibility = View.VISIBLE
             ivPlayPause.isActivated = true
             ivCaptureButton.isActivated = true
+            isVideoRecording = true
         }
-        isVideoRecording = !isVideoRecording
     }
 
     private val barcodeDetectorOptions = FirebaseVisionBarcodeDetectorOptions.Builder()
@@ -100,7 +111,20 @@ open class CameraFragment : Fragment() {
 
             val decoding = AtomicBoolean(false)
 
-            addCameraOpenedListener { Timber.i("Camera opened.") }
+            addCameraOpenedListener {
+                Timber.i("Camera opened.")
+
+                //camera.supportedAspectRatios.forEach {
+                //    System.out.println("Aspect ratio: " + it.x + " : " + it.y)
+                //    camera.supportedVideoSizes().sizes(it).forEach { size ->
+                //        println("Video size: " + size.width + " : " + size.height)
+                //    }
+                //}
+
+                val aspectRatio = AspectRatio.of( 4, 3)
+
+                camera.aspectRatio = aspectRatio
+            }
 
             val decodeSuccessListener = listener@{ barcodes: MutableList<FirebaseVisionBarcode> ->
                 if (barcodes.isEmpty()) {
@@ -138,6 +162,19 @@ open class CameraFragment : Fragment() {
             }
 
             addCameraClosedListener { Timber.i("Camera closed.") }
+
+            addVideoRecordStoppedListener {
+                val time = System.currentTimeMillis()
+                totalTime = time - totalTime
+                recordingTime = time - recordingTime
+                println("DEBUG VIDEO WAS RECORDED total=$totalTime, recording=$recordingTime")
+                stoppedRecording()
+            }
+
+            addVideoRecordStartedListener {
+                println("DEBUG VIDEO WAS STARTED")
+                recordingTime = System.currentTimeMillis()
+            }
         }
     }
 
@@ -204,10 +241,32 @@ open class CameraFragment : Fragment() {
         }
 
         ivCameraSwitch.setOnClickListener {
+
+            /*
+             * This block will switch between the default front and back
+             * camera. If there are more than two cameras it will only switch between 2.
+             */
+            /*
             camera.facing = when (camera.facing) {
                 Modes.Facing.FACING_BACK -> Modes.Facing.FACING_FRONT
                 else -> Modes.Facing.FACING_BACK
             }
+            */
+
+            /*
+             * This will switch to the next camera, looping through all back and front cameras
+             */
+            camera.nextCamera()
+
+            /*
+             * This will switch to any camera by cameraId
+             * In this example it is picking the last read facing camera
+             */
+            /*
+            val cameraMap = camera.cameraMap()
+            camera.facing = cameraMap.camerasByFacing(Modes.Facing.FACING_BACK).last()
+            */
+
             updateViewState()
         }
 
@@ -272,5 +331,12 @@ open class CameraFragment : Fragment() {
     override fun onDestroyView() {
         camera.run { if (isCameraOpened) stop(removeAllListeners = true) }
         super.onDestroyView()
+    }
+
+    private fun stoppedRecording() {
+        ivPlayPause.visibility = View.GONE
+        ivPlayPause.isActivated = false
+        ivCaptureButton.isActivated = false
+        isVideoRecording = false
     }
 }
