@@ -117,6 +117,19 @@ internal class Camera1(
             return previewSizes.ratios()
         }
 
+    override val cameraMap: CameraMap = CameraMap().apply {
+        val info = android.hardware.Camera.CameraInfo()
+        for (i in 0..(Camera.getNumberOfCameras()-1)) {
+            Camera.getCameraInfo(i, info)
+            when (info.facing) {
+                Camera.CameraInfo.CAMERA_FACING_BACK ->
+                    this.add(Modes.Facing.FACING_BACK, cameraId, null)
+                Camera.CameraInfo.CAMERA_FACING_FRONT ->
+                    this.add(Modes.Facing.FACING_FRONT, cameraId, null)
+            }
+        }
+    }
+
     private var autoFocus: Boolean = false
         get() {
             if (!isCameraOpened) return field
@@ -217,15 +230,6 @@ internal class Camera1(
         releaseCamera()
     }
 
-    override fun facingByCameraId(cameraId: Int): Int {
-        val info = android.hardware.Camera.CameraInfo()
-        Camera.getCameraInfo(cameraId, info)
-        if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-            return Modes.Facing.FACING_FRONT
-        }
-        return Modes.Facing.FACING_BACK
-    }
-
     // Suppresses Camera#setPreviewTexture
     @SuppressLint("NewApi")
     fun setUpPreview() {
@@ -315,27 +319,6 @@ internal class Camera1(
             }
         }
         cameraId = INVALID_CAMERA_ID
-    }
-
-    /**
-     * Gets the cameraIds that are facing front or back.
-     * Pass in either Modes.Facing.FACING_BACK or FACING_FRONT
-     */
-    override fun cameraIdsByFacing(facing: Int): List<Int> {
-        val ids = mutableListOf<Int>()
-        val info = android.hardware.Camera.CameraInfo()
-        for (i in 0..(Camera.getNumberOfCameras()-1)) {
-            Camera.getCameraInfo(i, info)
-            if (facing == Modes.Facing.FACING_BACK &&
-                    info.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
-                ids.add(i)
-            }
-            else if (facing == Modes.Facing.FACING_FRONT &&
-                    info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-                ids.add(i)
-            }
-        }
-        return ids
     }
 
     /**

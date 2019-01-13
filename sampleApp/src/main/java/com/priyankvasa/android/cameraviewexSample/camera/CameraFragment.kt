@@ -76,7 +76,7 @@ open class CameraFragment : Fragment() {
                     audioEncoder = AudioEncoder.Aac
                     videoFrameRate = 30
                     videoStabilization = true
-                    videoSize = VideoSize.Size1080p
+                    videoSize = VideoSize.Size720p
                 }
             }
             ivPlayPause.visibility = View.VISIBLE
@@ -254,10 +254,18 @@ open class CameraFragment : Fragment() {
             */
 
             /*
-             * This will switch to the next camera, looping through all back and front
-             * cameras
+             * This will switch to the next camera, looping through all back and front cameras
              */
-            camera.nextCameraByFacing()
+            camera.nextCamera()
+
+            /*
+             * This will switch to any camera by cameraId
+             * In this example it is picking the last read facing camera
+             */
+            /*
+            val cameraMap = camera.cameraMap()
+            camera.facing = cameraMap.camerasByFacing(Modes.Facing.FACING_BACK).last()
+            */
 
             updateViewState()
         }

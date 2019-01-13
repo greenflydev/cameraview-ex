@@ -459,30 +459,10 @@ class CameraView @JvmOverloads constructor(
     }
 
     /**
-     * This will switch to the next camera, looping through all back and front
-     * cameras
+     * This will switch to the next camera, looping through all back and front cameras
      */
-    fun nextCameraByFacing() {
-        val backCameras = camera.cameraIdsByFacing(Modes.Facing.FACING_BACK)
-        val frontCameras = camera.cameraIdsByFacing(Modes.Facing.FACING_FRONT)
-        when (camera.facingByCameraId(facing)) {
-            Modes.Facing.FACING_BACK -> {
-                val index = backCameras.indexOf(facing)
-                if (index + 1 == backCameras.size) {
-                    this.facing = frontCameras[0]
-                } else {
-                    this.facing = backCameras[index + 1]
-                }
-            }
-            Modes.Facing.FACING_FRONT -> {
-                val index = frontCameras.indexOf(facing)
-                if (index + 1 == frontCameras.size) {
-                    this.facing = backCameras[0]
-                } else {
-                    this.facing = frontCameras[index + 1]
-                }
-            }
-        }
+    fun nextCamera() {
+        facing = camera.cameraMap.nextCamera(facing)
     }
 
     /**
@@ -699,6 +679,14 @@ class CameraView @JvmOverloads constructor(
      * @return true if video was stopped and saved to given outputFile, false otherwise
      */
     fun stopVideoRecording(): Boolean = camera.stopVideoRecording()
+
+    /**
+     * Gets the camera map which contains all of the front and back camera information
+     * @return the [CameraMap]
+     */
+    fun cameraMap(): CameraMap {
+        return camera.cameraMap
+    }
 
     @Parcelize
     internal data class SavedState(

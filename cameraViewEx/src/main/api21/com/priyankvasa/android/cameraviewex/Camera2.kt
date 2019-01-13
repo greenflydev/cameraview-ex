@@ -314,6 +314,21 @@ internal open class Camera2(
 
     private val internalFacing: Int get() = internalFacings[config.facing.value]
 
+    override val cameraMap: CameraMap = CameraMap().apply {
+        cameraManager.cameraIdList.forEach { cameraId ->
+            val characteristics = cameraManager.getCameraCharacteristics(cameraId)
+            val level = characteristics.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)
+            if (level != null && level != CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY) {
+                when (characteristics.get(CameraCharacteristics.LENS_FACING)) {
+                    CameraCharacteristics.LENS_FACING_BACK ->
+                        this.add(Modes.Facing.FACING_BACK, cameraId, characteristics)
+                    CameraCharacteristics.LENS_FACING_FRONT ->
+                        this.add(Modes.Facing.FACING_FRONT, cameraId, characteristics)
+                }
+            }
+        }
+    }
+
     override val supportedAspectRatios: Set<AspectRatio> get() = previewSizes.ratios()
 
     private val digitalZoom: DigitalZoom = DigitalZoom { cameraCharacteristics }
@@ -672,18 +687,6 @@ internal open class Camera2(
         }
     }
 
-    /**
-     * Returns Modes.Facing.FACING_FRONT or BACK for the passed in cameraId
-     */
-    override fun facingByCameraId(cameraId: Int): Int {
-        val cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId.toString())
-        val lensFacing = cameraCharacteristics.get(CameraCharacteristics.LENS_FACING)
-        if (lensFacing == CameraCharacteristics.LENS_FACING_FRONT) {
-            return Modes.Facing.FACING_FRONT
-        }
-        return Modes.Facing.FACING_BACK
-    }
-
     override fun setAspectRatio(ratio: AspectRatio): Boolean {
 
         if (!ratio.isValid()) {
@@ -782,33 +785,6 @@ internal open class Camera2(
             listener.onCameraError(CameraViewException("Failed to get a list of camera devices", e))
             return false
         }
-    }
-
-    /**
-     * Gets the cameraIds that are facing front or back.
-     * Pass in either Modes.Facing.FACING_BACK or FACING_FRONT
-     */
-    override fun cameraIdsByFacing(facing: Int): List<Int> {
-        val ids = mutableListOf<Int>()
-        cameraManager.cameraIdList.run {
-            forEach { id ->
-                val characteristics = cameraManager.getCameraCharacteristics(id)
-                val level = characteristics.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)
-                if (level != null &&
-                        level != CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY) {
-                    val internal = characteristics.get(CameraCharacteristics.LENS_FACING)
-                    if (internal != null && internal == CameraCharacteristics.LENS_FACING_BACK &&
-                            facing == Modes.Facing.FACING_BACK) {
-                        ids.add(Integer.parseInt(id))
-                    }
-                    else if (internal != null && internal == CameraCharacteristics.LENS_FACING_FRONT &&
-                            facing == Modes.Facing.FACING_FRONT) {
-                        ids.add(Integer.parseInt(id))
-                    }
-                }
-            }
-        }
-        return ids
     }
 
     /**

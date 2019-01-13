@@ -42,6 +42,8 @@ internal interface CameraInterface : LifecycleOwner {
 
     var cameraOrientation: Int
 
+    val cameraMap: CameraMap
+
     @Modes.JpegQuality
     var jpegQuality: Int
 
@@ -75,14 +77,6 @@ internal interface CameraInterface : LifecycleOwner {
     fun resumeVideoRecording(): Boolean
 
     fun stopVideoRecording(): Boolean
-
-    fun facingByCameraId(cameraId: Int): Int
-
-    /**
-     * Takes in either Modes.Facing.FACING_BACK or FACING_FRONT
-     * @return `list of camera ids` that are facing the passed in direction
-     */
-    fun cameraIdsByFacing(facing: Int): List<Int>
 
     interface Listener {
         suspend fun onCameraOpened()
