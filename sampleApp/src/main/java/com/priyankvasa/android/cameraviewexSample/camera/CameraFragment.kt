@@ -260,11 +260,13 @@ open class CameraFragment : Fragment() {
 
             /*
              * This will switch to any camera by cameraId
-             * In this example it is picking the last read facing camera
+             * In this example it is picking the last read facing camera and also getting the
+             * CameraCharacteristics.
              */
             /*
             val cameraMap = camera.cameraMap()
             camera.facing = cameraMap.camerasByFacing(Modes.Facing.FACING_BACK).last()
+            val characteristics = cameraMap.characteristics(camera.facing)
             */
 
             updateViewState()
