@@ -314,6 +314,10 @@ internal open class Camera2(
 
     private val internalFacing: Int get() = internalFacings[config.facing.value]
 
+    /**
+     * Populate the [CameraMap] with all of the cameraIds based on facing [Modes.Facing]
+     * and their [CameraCharacteristics]
+     */
     override val cameraMap: CameraMap = CameraMap().apply {
         cameraManager.cameraIdList.forEach { cameraId ->
             val characteristics = cameraManager.getCameraCharacteristics(cameraId)
@@ -321,9 +325,9 @@ internal open class Camera2(
             if (level != null && level != CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY) {
                 when (characteristics.get(CameraCharacteristics.LENS_FACING)) {
                     CameraCharacteristics.LENS_FACING_BACK ->
-                        this.add(Modes.Facing.FACING_BACK, cameraId, characteristics)
+                        add(Modes.Facing.FACING_BACK, cameraId, characteristics)
                     CameraCharacteristics.LENS_FACING_FRONT ->
-                        this.add(Modes.Facing.FACING_FRONT, cameraId, characteristics)
+                        add(Modes.Facing.FACING_FRONT, cameraId, characteristics)
                 }
             }
         }

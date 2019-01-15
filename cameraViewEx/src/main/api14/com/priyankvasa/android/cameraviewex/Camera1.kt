@@ -117,15 +117,18 @@ internal class Camera1(
             return previewSizes.ratios()
         }
 
+    /**
+     * Populate the [CameraMap] with all of the cameraIds based on facing [Modes.Facing]
+     */
     override val cameraMap: CameraMap = CameraMap().apply {
         val info = android.hardware.Camera.CameraInfo()
         for (i in 0..(Camera.getNumberOfCameras()-1)) {
             Camera.getCameraInfo(i, info)
             when (info.facing) {
                 Camera.CameraInfo.CAMERA_FACING_BACK ->
-                    this.add(Modes.Facing.FACING_BACK, cameraId, null)
+                    add(Modes.Facing.FACING_BACK, cameraId, null)
                 Camera.CameraInfo.CAMERA_FACING_FRONT ->
-                    this.add(Modes.Facing.FACING_FRONT, cameraId, null)
+                    add(Modes.Facing.FACING_FRONT, cameraId, null)
             }
         }
     }
