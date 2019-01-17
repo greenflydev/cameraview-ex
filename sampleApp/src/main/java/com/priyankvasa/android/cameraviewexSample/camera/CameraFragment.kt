@@ -121,7 +121,7 @@ open class CameraFragment : Fragment() {
                 //    }
                 //}
 
-                val aspectRatio = AspectRatio.of( 4, 3)
+                val aspectRatio = AspectRatio.of( 16, 9)
 
                 camera.aspectRatio = aspectRatio
             }
