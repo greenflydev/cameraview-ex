@@ -19,10 +19,9 @@ package com.priyankvasa.android.cameraviewex
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
+import com.priyankvasa.android.cameraviewex.extension.isUiThread
 
-internal class CameraConfigLiveData<T>(
-        private val defaultValue: T
-) : MutableLiveData<T>() {
+internal class CameraConfigLiveData<T>(private val defaultValue: T) : MutableLiveData<T>() {
 
     internal var value: T = defaultValue
         get() = super.getValue() ?: defaultValue
@@ -30,7 +29,7 @@ internal class CameraConfigLiveData<T>(
             if (field == value) return
             lastValue = field
             field = value
-            super.setValue(value)
+            if (Thread.currentThread().isUiThread) super.setValue(value) else super.postValue(value)
         }
 
     init {

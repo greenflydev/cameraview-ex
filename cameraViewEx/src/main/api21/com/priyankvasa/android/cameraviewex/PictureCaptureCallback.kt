@@ -23,9 +23,7 @@ import android.hardware.camera2.CaptureResult
 import android.hardware.camera2.TotalCaptureResult
 import android.os.Build
 
-/**
- * A [CameraCaptureSession.CaptureCallback] for capturing a still picture.
- */
+/** A [CameraCaptureSession.CaptureCallback] for capturing a still picture. */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 internal abstract class PictureCaptureCallback : CameraCaptureSession.CaptureCallback() {
 
@@ -36,20 +34,16 @@ internal abstract class PictureCaptureCallback : CameraCaptureSession.CaptureCal
     }
 
     override fun onCaptureProgressed(
-            session: CameraCaptureSession,
-            request: CaptureRequest,
-            partialResult: CaptureResult
-    ) {
-        process(partialResult)
-    }
+        session: CameraCaptureSession,
+        request: CaptureRequest,
+        partialResult: CaptureResult
+    ) = process(partialResult)
 
     override fun onCaptureCompleted(
-            session: CameraCaptureSession,
-            request: CaptureRequest,
-            result: TotalCaptureResult
-    ) {
-        process(result)
-    }
+        session: CameraCaptureSession,
+        request: CaptureRequest,
+        result: TotalCaptureResult
+    ) = process(result)
 
     private fun process(result: CaptureResult) {
 
@@ -64,7 +58,7 @@ internal abstract class PictureCaptureCallback : CameraCaptureSession.CaptureCal
                         val awbState = result.get(CaptureResult.CONTROL_AWB_STATE)
 
                         if ((aeState == null || aeState == CaptureResult.CONTROL_AE_STATE_CONVERGED)
-                                && (awbState == null || awbState == CaptureResult.CONTROL_AWB_STATE_CONVERGED)) {
+                            && (awbState == null || awbState == CaptureResult.CONTROL_AWB_STATE_CONVERGED)) {
                             setState(STATE_CAPTURING)
                             onReady()
                         } else {
@@ -102,14 +96,10 @@ internal abstract class PictureCaptureCallback : CameraCaptureSession.CaptureCal
         }
     }
 
-    /**
-     * Called when it is ready to take a still picture.
-     */
+    /** Called when it is ready to take a still picture. */
     abstract fun onReady()
 
-    /**
-     * Called when it is necessary to run the precapture sequence.
-     */
+    /** Called when it is necessary to run the precapture sequence. */
     abstract fun onPreCaptureRequired()
 
     companion object {

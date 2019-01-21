@@ -18,13 +18,21 @@
 
 package com.priyankvasa.android.cameraviewex
 
-import android.annotation.TargetApi
 import android.media.ImageReader
 import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.LifecycleOwner
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import java.io.File
+import kotlin.coroutines.CoroutineContext
 
-internal interface CameraInterface : LifecycleOwner {
+internal interface CameraInterface : LifecycleOwner, CoroutineScope {
+
+    val cameraJob: Job
+
+    override val coroutineContext: CoroutineContext get() = Dispatchers.Main + cameraJob
 
     val preview: PreviewImpl
 
@@ -32,15 +40,15 @@ internal interface CameraInterface : LifecycleOwner {
 
     val listener: Listener
 
+    val isActive: Boolean
+
     val isCameraOpened: Boolean
 
     var isVideoRecording: Boolean
 
     val supportedAspectRatios: Set<AspectRatio>
 
-    var displayOrientation: Int
-
-    var cameraOrientation: Int
+    var deviceRotation: Int
 
     val cameraMap: CameraMap
 
@@ -59,7 +67,14 @@ internal interface CameraInterface : LifecycleOwner {
      */
     fun start(cameraId: Int): Boolean
 
-    fun stop()
+    fun stop() {
+        if (isVideoRecording) stopVideoRecording()
+    }
+
+    fun destroy() {
+        cameraJob.cancel()
+        stop()
+    }
 
     /**
      * @return `true` if the aspect ratio was changed.
@@ -70,27 +85,27 @@ internal interface CameraInterface : LifecycleOwner {
 
     fun startVideoRecording(outputFile: File, config: VideoConfiguration)
 
-    @TargetApi(Build.VERSION_CODES.N)
+    @RequiresApi(Build.VERSION_CODES.N)
     fun pauseVideoRecording(): Boolean
 
-    @TargetApi(Build.VERSION_CODES.N)
+    @RequiresApi(Build.VERSION_CODES.N)
     fun resumeVideoRecording(): Boolean
 
     fun stopVideoRecording(): Boolean
 
     interface Listener {
-        suspend fun onCameraOpened()
-        suspend fun onCameraClosed()
+        fun onCameraOpened()
+        fun onCameraClosed()
         fun onPictureTaken(imageData: ByteArray)
         fun onVideoRecordStarted()
-        fun onVideoRecordStopped()
+        fun onVideoRecordStopped(isSuccess: Boolean)
         fun onCameraError(
                 e: Exception,
                 errorLevel: ErrorLevel = ErrorLevel.Error,
                 isCritical: Boolean = false
         )
 
-        @TargetApi(Build.VERSION_CODES.KITKAT)
+        @RequiresApi(Build.VERSION_CODES.KITKAT)
         fun onPreviewFrame(reader: ImageReader)
     }
 }

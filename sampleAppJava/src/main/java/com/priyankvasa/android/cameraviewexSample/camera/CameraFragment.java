@@ -1,6 +1,7 @@
 package com.priyankvasa.android.cameraviewexSample.camera;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.media.Image;
 import android.os.Bundle;
@@ -26,22 +27,26 @@ import timber.log.Timber;
 public class CameraFragment extends Fragment {
 
     private CameraView camera;
-    private ImageView ivCapture;
     private ImageView ivFlashSwitch;
     private ImageView ivPhoto;
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(
+        @NonNull LayoutInflater inflater,
+        @Nullable ViewGroup container,
+        @Nullable Bundle savedInstanceState
+    ) {
         return inflater.inflate(R.layout.fragment_camera, container, false);
     }
 
+    @SuppressLint("MissingPermission")
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
         camera = view.findViewById(R.id.camera);
-        ivCapture = view.findViewById(R.id.ivCaptureButton);
+        ImageView ivCapture = view.findViewById(R.id.ivCaptureButton);
         ivFlashSwitch = view.findViewById(R.id.ivFlashSwitch);
         ivPhoto = view.findViewById(R.id.ivPhoto);
 
@@ -80,6 +85,29 @@ public class CameraFragment extends Fragment {
         setupCamera();
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (ActivityCompat.checkSelfPermission(
+            requireContext(),
+            Manifest.permission.CAMERA
+        ) == PackageManager.PERMISSION_GRANTED) {
+            camera.start();
+        }
+    }
+
+    @Override
+    public void onPause() {
+        camera.stop();
+        super.onPause();
+    }
+
+    @Override
+    public void onDestroyView() {
+        camera.destroy();
+        super.onDestroyView();
+    }
+
     private void setupCamera() {
 
         View view = getView();
@@ -93,8 +121,8 @@ public class CameraFragment extends Fragment {
         camera.addPictureTakenListener((byte[] imageData) -> {
             ivPhoto.setVisibility(View.VISIBLE);
             Glide.with(requireContext())
-                    .load(imageData)
-                    .into(ivPhoto);
+                .load(imageData)
+                .into(ivPhoto);
             return Unit.INSTANCE;
         });
 
@@ -113,27 +141,5 @@ public class CameraFragment extends Fragment {
             Timber.i("Camera closed.");
             return Unit.INSTANCE;
         });
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (!camera.isCameraOpened()
-                && ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
-                == PackageManager.PERMISSION_GRANTED) {
-            camera.start();
-        }
-    }
-
-    @Override
-    public void onPause() {
-        if (camera.isCameraOpened()) camera.stop(false);
-        super.onPause();
-    }
-
-    @Override
-    public void onDestroyView() {
-        if (camera.isCameraOpened()) camera.stop(true);
-        super.onDestroyView();
     }
 }
