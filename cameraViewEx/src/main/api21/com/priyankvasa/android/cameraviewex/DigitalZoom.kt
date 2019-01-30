@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Priyank Vasa
+ * Copyright 2019 Priyank Vasa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package com.priyankvasa.android.cameraviewex
 import android.graphics.Rect
 import android.hardware.camera2.CameraCharacteristics
 import android.os.Build
-import androidx.annotation.RequiresApi
+import android.support.annotation.RequiresApi
 import kotlin.math.roundToInt
 
 /** This is a helper class for digital zooming. */
@@ -32,12 +32,12 @@ internal class DigitalZoom(private val getCameraCharacteristics: () -> CameraCha
     /** Maximum possible digital zoom based on [CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM]. */
     val maxZoom: Float
         get() = getCameraCharacteristics()
-                ?.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM)
-                ?: 1f
+            ?.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM)
+            ?: 1f
 
     private val sensorArraySize: Rect?
         get() = getCameraCharacteristics()
-                ?.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE)
+            ?.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE)
 
     /** Scale factor tolerance until which zooming is ignored */
     private val tolerance = 0.004f
@@ -76,10 +76,10 @@ internal class DigitalZoom(private val getCameraCharacteristics: () -> CameraCha
         val yDelta = 0.5f * sensorArraySize.height() / zoom
 
         return Rect(
-                (xCenter - xDelta).roundToInt(),
-                (yCenter - yDelta).roundToInt(),
-                (xCenter + xDelta).roundToInt(),
-                (yCenter + yDelta).roundToInt()
+            (xCenter - xDelta).roundToInt(),
+            (yCenter - yDelta).roundToInt(),
+            (xCenter + xDelta).roundToInt(),
+            (yCenter + yDelta).roundToInt()
         ).also { currentZoom = zoom }
     }
 }

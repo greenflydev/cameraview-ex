@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Priyank Vasa
+ * Copyright 2019 Priyank Vasa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import android.renderscript.RenderScript
 import android.renderscript.Script
 import android.renderscript.ScriptIntrinsicYuvToRGB
 import android.renderscript.Type
-import androidx.annotation.RequiresApi
+import android.support.annotation.RequiresApi
 import timber.log.Timber
 import java.io.ByteArrayOutputStream
 
@@ -260,20 +260,20 @@ internal object ImageProcessor {
         val imageData = yuvImageData(image)
 
         val yuvType = Type.Builder(rs, Element.U8(rs))
-                .setX(imageWidth)
-                .setY(imageHeight)
-                .setYuvFormat(ImageFormat.YUV_420_888)
-                .create()
+            .setX(imageWidth)
+            .setY(imageHeight)
+            .setYuvFormat(ImageFormat.YUV_420_888)
+            .create()
         val yuvAllocation: Allocation = Allocation.createTyped(
-                rs,
-                yuvType,
-                Allocation.USAGE_SCRIPT
+            rs,
+            yuvType,
+            Allocation.USAGE_SCRIPT
         ).apply { copyFrom(imageData) }
 
         val rgbType = Type.Builder(rs, Element.RGBA_8888(rs))
-                .setX(imageWidth)
-                .setY(imageHeight)
-                .create()
+            .setX(imageWidth)
+            .setY(imageHeight)
+            .create()
         val rgbAllocation: Allocation = Allocation.createTyped(rs, rgbType, Allocation.USAGE_SCRIPT)
 
         // Create script

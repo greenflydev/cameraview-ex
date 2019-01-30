@@ -1,4 +1,4 @@
-package com.priyankvasa.android.cameraviewexSample
+package com.priyankvasa.android.cameraviewex_sample
 
 import android.view.GestureDetector
 import android.view.MotionEvent
@@ -110,9 +110,9 @@ inline class Direction(val value: Float) {
          * @return returns true if the given angle is in the interval [init, end).
          */
         private fun inRange(
-                angle: Double,
-                init: Float,
-                end: Float
+            angle: Double,
+            init: Float,
+            end: Float
         ): Boolean = angle >= init && angle < end
     }
 }

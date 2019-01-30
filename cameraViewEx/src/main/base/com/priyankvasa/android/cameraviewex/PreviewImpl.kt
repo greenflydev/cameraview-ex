@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Priyank Vasa
+ * Copyright 2019 Priyank Vasa
  *
  * Copyright (C) 2016 The Android Open Source Project
  *
@@ -22,11 +22,11 @@ import android.content.Context
 import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.SurfaceTexture
+import android.support.v4.math.MathUtils
 import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.math.MathUtils
 import com.priyankvasa.android.cameraviewex.extension.convertDpToPixelF
 import kotlin.math.roundToInt
 
@@ -84,11 +84,11 @@ internal abstract class PreviewImpl {
     }
 
     internal fun calculateTouchAreaRect(
-            surfaceWidth: Int,
-            surfaceHeight: Int,
-            centerX: Float,
-            centerY: Float,
-            sideLengthInDp: Float = 80f
+        surfaceWidth: Int,
+        surfaceHeight: Int,
+        centerX: Float,
+        centerY: Float,
+        sideLengthInDp: Float = 80f
     ): Rect {
 
         val areaSize: Float = context.convertDpToPixelF(sideLengthInDp)
@@ -99,10 +99,10 @@ internal abstract class PreviewImpl {
         val rectF = RectF(left, top, left + areaSize, top + areaSize)
 
         return Rect(
-                rectF.left.roundToInt(),
-                rectF.top.roundToInt(),
-                rectF.right.roundToInt(),
-                rectF.bottom.roundToInt()
+            rectF.left.roundToInt(),
+            rectF.top.roundToInt(),
+            rectF.right.roundToInt(),
+            rectF.bottom.roundToInt()
         )
     }
 

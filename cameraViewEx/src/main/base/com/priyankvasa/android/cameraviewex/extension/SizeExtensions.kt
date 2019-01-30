@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Priyank Vasa
+ * Copyright 2019 Priyank Vasa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package com.priyankvasa.android.cameraviewex.extension
 
-import androidx.core.math.MathUtils
+import android.support.v4.math.MathUtils
 import com.priyankvasa.android.cameraviewex.Size
 import com.priyankvasa.android.cameraviewex.VideoConfiguration
 import kotlin.math.roundToInt
@@ -29,8 +29,8 @@ internal fun Size.calculateVideoBitRate(): Int {
     val scaleFactor = (height * width).toFloat() / (1920 * 1080)
     // Clamp to the MIN, MAX range.
     return MathUtils.clamp(
-            (VideoConfiguration.BIT_RATE_1080P * scaleFactor).roundToInt(),
-            VideoConfiguration.BIT_RATE_MIN,
-            VideoConfiguration.BIT_RATE_MAX
+        (VideoConfiguration.BIT_RATE_1080P * scaleFactor).roundToInt(),
+        VideoConfiguration.BIT_RATE_MIN,
+        VideoConfiguration.BIT_RATE_MAX
     )
 }
