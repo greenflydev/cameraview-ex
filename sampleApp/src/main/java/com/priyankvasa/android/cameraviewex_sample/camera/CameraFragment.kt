@@ -15,11 +15,14 @@ import android.view.View
 import android.view.ViewGroup
 import com.google.firebase.ml.vision.FirebaseVision
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
+import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetector
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetectorOptions
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.priyankvasa.android.cameraviewex.AspectRatio
+import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata
 import com.priyankvasa.android.cameraviewex.AudioEncoder
 import com.priyankvasa.android.cameraviewex.ErrorLevel
+import com.priyankvasa.android.cameraviewex.LegacyImage
 import com.priyankvasa.android.cameraviewex.Modes
 import com.priyankvasa.android.cameraviewex.VideoSize
 import com.priyankvasa.android.cameraviewex_sample.R
@@ -65,11 +68,11 @@ open class CameraFragment : Fragment(), CoroutineScope {
     @SuppressLint("MissingPermission")
     private val imageCaptureListener = View.OnClickListener { camera.capture() }
 
-    private var isVideoRecording = false
+    private val decoding = AtomicBoolean(false)
 
     @SuppressLint("MissingPermission")
     private val videoCaptureListener = View.OnClickListener {
-        if (isVideoRecording) {
+        if (camera.isVideoRecording) {
             camera.stopVideoRecording()
             ivPlayPause.hide()
             ivPlayPause.isActivated = false
@@ -89,14 +92,31 @@ open class CameraFragment : Fragment(), CoroutineScope {
             }
             ivVideoCaptureButton.isActivated = true
         }
-        isVideoRecording = !isVideoRecording
     }
 
     private val barcodeDetectorOptions = FirebaseVisionBarcodeDetectorOptions.Builder()
         .setBarcodeFormats(FirebaseVisionBarcode.FORMAT_ALL_FORMATS)
         .build()
 
-    private val barcodeDetector = FirebaseVision.getInstance().getVisionBarcodeDetector(barcodeDetectorOptions)
+    private val barcodeDetector: FirebaseVisionBarcodeDetector =
+        FirebaseVision.getInstance().getVisionBarcodeDetector(barcodeDetectorOptions)
+
+    @SuppressLint("SetTextI18n")
+    private val decodeSuccessListener: (MutableList<FirebaseVisionBarcode>) -> Unit =
+        listener@{ barcodes: MutableList<FirebaseVisionBarcode> ->
+            launch {
+                if (barcodes.isEmpty()) {
+                    tvBarcodes.text = "Barcodes"
+                    return@launch
+                }
+                val barcodesStr = "Barcodes\n${barcodes.joinToString(
+                    "\n",
+                    transform = { it.rawValue as? CharSequence ?: "" }
+                )}"
+                Timber.i("Barcodes: $barcodesStr")
+                tvBarcodes.text = barcodesStr
+            }
+        }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -134,6 +154,7 @@ open class CameraFragment : Fragment(), CoroutineScope {
 
     override fun onDestroyView() {
         camera.destroy()
+        barcodeDetector.close()
         job.cancel()
         activity?.showSystemUI()
         super.onDestroyView()
@@ -144,35 +165,24 @@ open class CameraFragment : Fragment(), CoroutineScope {
 
         with(camera) {
 
-            val decoding = AtomicBoolean(false)
-
-            addCameraOpenedListener {
-                Timber.i("Camera opened.")
-                camera.aspectRatio = AspectRatio.Ratio16x9
-            }
-
-            val decodeSuccessListener =
-                listener@{ barcodes: MutableList<FirebaseVisionBarcode> ->
-                    if (barcodes.isEmpty()) {
-                        tvBarcodes.text = "Barcodes"
-                        return@listener
-                    }
-                    val barcodesStr = "Barcodes\n${barcodes.joinToString(
-                        "\n",
-                        transform = { it.rawValue as? CharSequence ?: "" }
-                    )}"
-                    Timber.i("Barcodes: $barcodesStr")
-                    tvBarcodes.text = barcodesStr
-                }
+            addCameraOpenedListener { Timber.i("Camera opened.") }
 
             setPreviewFrameListener { image: Image ->
-                if (!decoding.get()) {
-                    decoding.set(true)
-                    val visionImage = FirebaseVisionImage.fromMediaImage(image, 0)
-                    barcodeDetector.detectInImage(visionImage)
-                        .addOnCompleteListener { decoding.set(false) }
-                        .addOnSuccessListener(decodeSuccessListener)
-                        .addOnFailureListener { e -> Timber.e(e) }
+                if (decoding.compareAndSet(false, true))
+                    FirebaseVisionImage.fromMediaImage(image, 0).detectBarcodes()
+            }
+
+            setLegacyPreviewFrameListener { image: LegacyImage ->
+
+                if (decoding.compareAndSet(false, true)) {
+
+                    val metadata = FirebaseVisionImageMetadata.Builder()
+                        .setFormat(image.format)
+                        .setWidth(image.width)
+                        .setHeight(image.height)
+                        .build()
+
+                    FirebaseVisionImage.fromByteArray(image.data, metadata).detectBarcodes()
                 }
             }
 
@@ -196,6 +206,13 @@ open class CameraFragment : Fragment(), CoroutineScope {
         }
     }
 
+    private fun FirebaseVisionImage.detectBarcodes() {
+        barcodeDetector.detectInImage(this)
+            .addOnCompleteListener { decoding.set(false) }
+            .addOnSuccessListener(decodeSuccessListener)
+            .addOnFailureListener { e -> Timber.e(e) }
+    }
+
     private fun saveDataToFile(data: ByteArray): File = nextImageFile.apply {
         createNewFile()
         runCatching { BufferedOutputStream(outputStream()).use { it.write(data) } }
@@ -207,6 +224,14 @@ open class CameraFragment : Fragment(), CoroutineScope {
     }
 
     private fun setupView() {
+
+        val context = context ?: return
+
+        ivSettings.setOnClickListener {
+            fragmentManager?.let {
+                SettingsDialogFragment.newInstance().show(it, SettingsDialogFragment.TAG)
+            }
+        }
 
         ivFlashSwitch.setOnClickListener {
 
@@ -228,7 +253,7 @@ open class CameraFragment : Fragment(), CoroutineScope {
                 else -> return@setOnClickListener
             }
 
-            context?.let { c -> ivFlashSwitch.setImageDrawable(ActivityCompat.getDrawable(c, flashDrawableId)) }
+            ivFlashSwitch.setImageDrawable(ActivityCompat.getDrawable(context, flashDrawableId))
         }
 
         ivCameraMode.setOnClickListener {
@@ -249,14 +274,13 @@ open class CameraFragment : Fragment(), CoroutineScope {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             ivPlayPause.setOnClickListener {
-                if (isVideoRecording) {
+                if (camera.isVideoRecording) {
                     camera.pauseVideoRecording()
                     ivPlayPause.isActivated = false
                 } else {
                     camera.resumeVideoRecording()
                     ivPlayPause.isActivated = true
                 }
-                isVideoRecording = !isVideoRecording
             }
         }
 
