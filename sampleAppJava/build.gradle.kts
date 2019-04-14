@@ -16,17 +16,24 @@ plugins {
     id("com.android.application")
     kotlin("android")
     kotlin("android.extensions")
-    id("com.google.gms.google-services")
 }
 
 android {
 
     signingConfigs {
-        create("config") {
+
+        create("release") {
             storeFile = file("$rootDir/keystore.jks")
             storePassword = System.getenv("KEYSTORE_PASSWORD")
             keyAlias = "android-release"
             keyPassword = System.getenv("KEYALIAS_PASSWORD")
+        }
+
+        create("stage") {
+            storeFile = file("$rootDir/keystore.jks")
+            storePassword = System.getenv("KEYSTORE_PASSWORD")
+            keyAlias = "android-stage"
+            keyPassword = System.getenv("KEYALIAS_STAGE_PASSWORD")
         }
     }
 
@@ -44,27 +51,27 @@ android {
     buildTypes {
 
         getByName("debug") {
-            isMinifyEnabled = false
-            isUseProguard = false
             isDebuggable = true
+            applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
         }
 
-        create("stage") {
-            initWith(buildTypes["debug"])
-            versionNameSuffix = "-stage"
+        getByName("release") {
+            isDebuggable = true
+            proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs["release"]
         }
 
-        getByName("release") {
-            isMinifyEnabled = true
-            isUseProguard = true
-            isDebuggable = false
-            proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
-            signingConfig = signingConfigs["config"]
+        create("stage").apply {
+            initWith(buildTypes["release"])
+            applicationIdSuffix = ".stage"
+            versionNameSuffix = "-stage"
+            signingConfig = signingConfigs["stage"]
         }
     }
+
     compileOptions {
-        setSourceCompatibility(JavaVersion.VERSION_1_8)
+        sourceCompatibility = JavaVersion.VERSION_1_8
         setTargetCompatibility(JavaVersion.VERSION_1_8)
     }
 }
@@ -75,7 +82,6 @@ dependencies {
 
     // cameraviewex
     implementation(project(":cameraViewEx"))
-//    implementation("com.priyankvasa.android:cameraview-ex:2.2.2")
 
     // Kotlin
     implementation(Config.Libs.kotlinStdLibJdk8)
@@ -83,10 +89,6 @@ dependencies {
     // Android support
     implementation(Config.Libs.appcompatV7)
     implementation(Config.Libs.constraintLayout)
-
-    // Firebase
-    implementation(Config.Libs.firebaseCore)
-    implementation(Config.Libs.firebaseMlVision)
 
     // Glide
     implementation(Config.Libs.glide) { exclude("com.android.support") }
