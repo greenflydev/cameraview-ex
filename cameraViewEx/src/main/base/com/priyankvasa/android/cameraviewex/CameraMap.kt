@@ -44,6 +44,7 @@ class CameraMap {
      * or [Modes.Facing.FACING_FRONT], a camera id and optional [CameraCharacteristics]
      */
     fun add(facing: Int, cameraId: Int, cameraCharacteristics: CameraCharacteristics?) {
+        println("DEBUG cameraMap.add: adding facing=$facing, cameraId=$cameraId")
         cameras[facing]?.add(cameraId)
         characteristics[cameraId] = cameraCharacteristics
     }
@@ -54,7 +55,11 @@ class CameraMap {
      *
      * @return list of cameras or an empty list
      */
-    fun camerasByFacing(facing: Int): ArrayList<Int> = cameras[facing] ?: ArrayList()
+    //fun camerasByFacing(facing: Int): ArrayList<Int> = cameras[facing] ?: ArrayList()
+    fun camerasByFacing(facing: Int): ArrayList<Int> {
+        println("DEBUG cameraMap.camerasByFacing: facing=$facing, size=" + cameras[facing]?.size)
+        return cameras[facing] ?: ArrayList()
+    }
 
     /**
      * This will be null for pre lollipop Camera1 devices
@@ -73,8 +78,11 @@ class CameraMap {
     fun nextCamera(cameraId: Int): Int {
         val backCameras = camerasByFacing(Modes.Facing.FACING_BACK)
         val frontCameras = camerasByFacing(Modes.Facing.FACING_FRONT)
+        println("DEBUG backCameras.size=" + backCameras.size)
+        println("DEBUG frontCameras.size=" + frontCameras.size)
         when (facing(cameraId)) {
             Modes.Facing.FACING_BACK -> {
+                println("DEBUG is facing back")
                 val index = backCameras.indexOf(cameraId)
                 return if (index + 1 == backCameras.size) {
                     when (frontCameras.size) {
@@ -86,6 +94,7 @@ class CameraMap {
                 }
             }
             Modes.Facing.FACING_FRONT -> {
+                println("DEBUG is facing front")
                 val index = frontCameras.indexOf(cameraId)
                 return if (index + 1 == frontCameras.size) {
                     when (backCameras.size) {

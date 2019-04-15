@@ -468,14 +468,22 @@ internal open class Camera2(
      */
     override val cameraMap: CameraMap = CameraMap().apply {
         cameraManager.cameraIdList.forEach { cameraId ->
+            System.out.println("DEBUG Camera2.cameraId=$cameraId")
             val characteristics = cameraManager.getCameraCharacteristics(cameraId)
             val level = characteristics.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)
+            println("DEBUG level=$level")
             if (level != null && level != CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY) {
                 when (characteristics.get(CameraCharacteristics.LENS_FACING)) {
                     CameraCharacteristics.LENS_FACING_BACK ->
+                    {
+                        println("DEBUG camera facing back")
                         add(Modes.Facing.FACING_BACK, cameraId, characteristics)
+                    }
                     CameraCharacteristics.LENS_FACING_FRONT ->
+                    {
+                        println("DEBUG camera facing front")
                         add(Modes.Facing.FACING_FRONT, cameraId, characteristics)
+                    }
                 }
             }
         }

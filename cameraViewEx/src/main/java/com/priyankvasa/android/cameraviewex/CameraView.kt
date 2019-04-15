@@ -113,7 +113,10 @@ class CameraView @JvmOverloads constructor(
         // Based on OS version select the best camera implementation
         when {
             Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP ->
+            {
+                println("DEBUG CameraView.Camera1")
                 Camera1(listenerManager, preview, config, SupervisorJob(parentJob))
+            }
             Build.VERSION.SDK_INT < Build.VERSION_CODES.M ->
                 Camera2(listenerManager, preview, config, SupervisorJob(parentJob), context)
             Build.VERSION.SDK_INT < Build.VERSION_CODES.N ->
@@ -482,6 +485,7 @@ class CameraView @JvmOverloads constructor(
      */
     @RequiresPermission(Manifest.permission.CAMERA)
     fun start() {
+        println("DEBUG CameraView.start")
 
         if (!requireActive()) return
 
@@ -511,6 +515,7 @@ class CameraView @JvmOverloads constructor(
 
     private fun fallback(savedState: Parcelable) {
 
+        println("DEBUG CameraView.fallback")
         camera = Camera1(listenerManager, preview, config, SupervisorJob(parentJob))
 
         // Restore original state
@@ -535,25 +540,84 @@ class CameraView @JvmOverloads constructor(
     // TODO COMPARE TO START
     @RequiresPermission(Manifest.permission.CAMERA)
     fun start(id: Int) {
+        println("DEBUG CameraView.Start id=$id")
 
+        /*
         if (!requireActive() || requireCameraOpened()) return
 
         if (!camera.start(id)) {
             // Store the state and restore this state after falling back to Camera1
             val state = onSaveInstanceState()
             camera.destroy()
+            println("DEBUG CameraView.start(id)")
             // Device uses legacy hardware layer; fall back to Camera1
             camera = Camera1(listenerManager, preview, config, SupervisorJob(parentJob))
             onRestoreInstanceState(state)
             camera.start(id)
         }
+        */
+
+        if (!requireActive()) return
+
+        if (isCameraOpened) {
+            listenerManager.onCameraError(
+                    CameraViewException("Camera is already open. Call stop() first."),
+                    errorLevel = ErrorLevel.Warning
+            )
+            return
+        }
+
+        // Save original state and restore later if camera falls back to using Camera1
+        val state: Parcelable = onSaveInstanceState()
+
+        println("DEBUG going to start id=$id")
+        if (camera.start(id)) return // Camera started successfully, return.
+        println("DEBUG failed start id=$id")
+
+        // This camera instance is no longer useful, destroy it.
+        camera.destroy()
+
+        // Already tried using Camera1 api, return.
+        // Errors leading to this situation are already posted from Camera1 api
+        if (camera is Camera1) return
+
+        // Device uses legacy hardware layer; fall back to Camera1
+        fallback(id, state)
+    }
+
+    private fun fallback(id: Int, savedState: Parcelable) {
+
+        println("DEBUG CameraView.fallback id=$id")
+        camera = Camera1(listenerManager, preview, config, SupervisorJob(parentJob))
+
+        // Restore original state
+        onRestoreInstanceState(savedState)
+
+        // Try to start camera again using Camera1 api
+        // Return if successful
+        println("DEBUG CameraView.fallback going to start id=$id")
+        if (camera.start(id)) return
+        println("DEBUG CameraView.fallback failed start id=$id")
+
+        // Unable to start camera using any api. Post a critical error.
+        listenerManager.onCameraError(
+                CameraViewException("Unable to use camera or camera2 api." +
+                        " Please check if the camera hardware is usable and CameraView is correctly configured."),
+                ErrorLevel.ErrorCritical
+        )
     }
 
     /**
      * This will switch to the next camera, looping through all back and front cameras
      */
     fun nextCamera() {
+        println("DEBUG 1: $facing, " + camera.cameraMap.nextCamera(facing))
         facing = camera.cameraMap.nextCamera(facing)
+        //facing = when (facing) {
+        //    0 -> 1
+        //    else -> 0
+        //}
+        println("DEBUG 2: $facing")
     }
 
     /** Take a picture. The result will be returned to listeners added by [addPictureTakenListener]. */

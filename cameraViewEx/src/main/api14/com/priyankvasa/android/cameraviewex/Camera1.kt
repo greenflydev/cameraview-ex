@@ -27,7 +27,6 @@ import android.hardware.Camera
 import android.os.SystemClock
 import android.support.media.ExifInterface
 import android.support.v4.util.SparseArrayCompat
-import android.support.v4.view.ViewCompat.setRotation
 import android.view.SurfaceHolder
 import com.priyankvasa.android.cameraviewex.extension.chooseOptimalPreviewSize
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -169,14 +168,16 @@ internal class Camera1(
      * Populate the [CameraMap] with all of the cameraIds based on facing [Modes.Facing]
      */
     override val cameraMap: CameraMap = CameraMap().apply {
-        val info = android.hardware.Camera.CameraInfo()
-        for (i in 0..(Camera.getNumberOfCameras()-1)) {
+        println("DEBUG Camera1.cameraMap triggered")
+        var info = Camera.CameraInfo()
+        for (i in 0 until Camera.getNumberOfCameras()) {
             Camera.getCameraInfo(i, info)
+            System.out.println("DEBUG Camera1.cameraMap cameraId=$cameraId, i=$i, info.facing=" + info.facing)
             when (info.facing) {
                 Camera.CameraInfo.CAMERA_FACING_BACK ->
-                    add(Modes.Facing.FACING_BACK, cameraId, null)
+                    add(Modes.Facing.FACING_BACK, i, null)
                 Camera.CameraInfo.CAMERA_FACING_FRONT ->
-                    add(Modes.Facing.FACING_FRONT, cameraId, null)
+                    add(Modes.Facing.FACING_FRONT, i, null)
             }
         }
     }
